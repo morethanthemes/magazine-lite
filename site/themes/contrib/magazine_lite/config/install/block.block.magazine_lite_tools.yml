@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.tools
+  module:
+    - system
+  theme:
+    - magazine_lite
+_core:
+  default_config_hash: ynO2yKZAHVatPS0VbbPLZ9nXA7QDybWr2TBTdZYELJI
+id: magazine_lite_tools
+theme: magazine_lite
+region: sidebar_first
+weight: -5
+provider: null
+plugin: 'system_menu_block:tools'
+settings:
+  id: 'system_menu_block:tools'
+  label: Tools
+  provider: system
+  label_display: visible
+  level: 1
+  depth: 0
+visibility: {  }

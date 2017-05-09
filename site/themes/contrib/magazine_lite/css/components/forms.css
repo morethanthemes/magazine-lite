@@ -1,0 +1,237 @@
+/**
+ * @file
+ * Visual styles for Magazine Lite's forms.
+ */
+.form-item,
+.form-actions {
+  margin: 20px 0;
+}
+input.form-text,
+input.form-tel,
+input.form-email,
+input.form-url,
+input.form-search,
+input.form-file,
+input.form-number,
+input.form-color,
+textarea,
+select {
+  padding: 10px 15px;
+  outline: none;
+  border: none;
+  -webkit-appearance: none;
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #f4f4f4;
+  background-color: #f4f4f4;
+  -webkit-transition: border-color 0.2s linear;
+  -o-transition: border-color 0.2s linear;
+  transition: border-color 0.2s linear;
+  font-weight: 500;
+  color: #2d2d2d;
+}
+select {
+  margin: 10px 0;
+}
+
+/*webkit specific rules for select list*/
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  select {
+    background-image: url("../../images/angle-down-black.png");
+    background-image: linear-gradient(transparent, transparent), url("../../images/angle-down-black.svg");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position: 98.5% 50%;
+    height: 46px;
+    border-radius: 0;
+  }
+}
+.region--gray-background input.form-text,
+.region--gray-background input.form-tel,
+.region--gray-background input.form-email,
+.region--gray-background input.form-url,
+.region--gray-background input.form-search,
+.region--gray-background input.form-file,
+.region--gray-background input.form-number,
+.region--gray-background input.form-color,
+.region--gray-background textarea,
+.region--gray-background select {
+  border-color: #ffffff;
+  background-color: #fff;
+}
+
+/*forms style 2*/
+.form-item--style-2 input.form-text {
+  background-color: transparent;
+  border-width: 0 0 1px 0;
+  padding: 10px 0;
+}
+.region--light-typography .form-item--style-2 input.form-text {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+.region--gray-background .form-item--style-2 input.form-text {
+  border-color: #dddddd;
+}
+.form-item--style-2 input.form-text:hover,
+.form-item--style-2 input.form-text:focus {
+  box-shadow: none;
+}
+.form-actions--style-2 {
+  position: relative;
+  display: inline-block;
+}
+.form-group .form-actions--style-2 {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.form-actions--style-2 i {
+  position: absolute;
+  left: auto;
+  right: 0;
+  top: 50%;
+  height: 20px;
+  margin-top: -8px;
+  z-index: -1;
+}
+.form-actions--style-2 .form-submit {
+  color: #2d2d2d;
+  background-color: transparent;
+  box-shadow: none;
+  display: inline-block;
+}
+.form-actions--style-2 .form-submit:hover,
+.form-actions--style-2 .form-submit:focus {
+  box-shadow: none;
+  background-color: transparent;
+}
+.region--light-typography .form-actions--style-2 .form-submit {
+  border-width: 0;
+  border-style: none;
+}
+.region--light-typography .form-actions--style-2 .form-submit:hover,
+.region--light-typography .form-actions--style-2 .form-submit:focus,
+.region--light-typography.region--colored-background .form-actions--style-2 .form-submit:hover,
+.region--light-typography.region--colored-background .form-actions--style-2 .form-submit:focus {
+  background-color: transparent;
+  color: #ffffff;
+}
+
+/*inline form elements*/
+.container-inline:not(.block) {
+  margin: 15px 0;
+}
+.container-inline input.form-text,
+.container-inline input.form-tel,
+.container-inline input.form-email,
+.container-inline input.form-url,
+.container-inline input.form-search,
+.container-inline input.form-file,
+.container-inline input.form-number,
+.container-inline input.form-color {
+  width: auto;
+  margin-right: 5px;
+}
+.container-inline input[type="submit"] {
+  margin: 0;
+}
+@media (max-width: 767px) {
+  .container-inline .form-actions {
+    margin: 10px 0;
+    display: block;
+  }
+  .container-inline .form-submit {
+    margin-top: 5px;
+  }
+  .container-inline input.form-text,
+  .container-inline input.form-tel,
+  .container-inline input.form-email,
+  .container-inline input.form-url,
+  .container-inline input.form-search,
+  .container-inline input.form-file,
+  .container-inline input.form-number,
+  .container-inline input.form-color {
+    width: 100%;
+  }
+}
+
+/*Form group*/
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+.form-group:last-child {
+  margin-bottom: 0;
+}
+.form-group .form-item, 
+.form-group .form-actions {
+  margin: 0;
+}
+.form-submit-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 30px;
+  height: 100%;
+  color: #ffffff;
+  border: none;
+  border-radius: 0 5px 5px 0;
+}
+.form-submit-icon i {
+  line-height: 40px
+}
+
+/*textarea*/
+textarea {
+  resize: none;
+}
+label {
+  display: block;
+}
+.label {
+  color: #2d2d2d;
+}
+.region--colored-background .label {
+  color: #ffffff;
+}
+
+/*fieldset*/
+fieldset {
+  border: 1px solid #eaeaea;
+  padding: 0.5em;
+  margin: 20px 0 35px;
+}
+fieldset legend {
+  border: 1px solid #eaeaea;
+  display: inline-block;
+  width: auto;
+  padding: 5px;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-left: 10px;
+}
+.region--light-typography fieldset legend {
+  color: #ffffff;
+}
+
+/*checkboxes and radios*/
+input[type="radio"],
+input[type="checkbox"] {
+  margin: 0px 5px 0px 0;
+}
+
+/*form placeholder*/
+::-webkit-input-placeholder {
+  color: #2d2d2d;
+}
+:-moz-placeholder {
+  color: #2d2d2d;
+}
+::-moz-placeholder {
+  color: #2d2d2d;
+}
+:-ms-input-placeholder {
+  color: #2d2d2d;
+}

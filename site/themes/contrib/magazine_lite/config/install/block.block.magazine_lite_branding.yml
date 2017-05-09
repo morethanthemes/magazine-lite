@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - magazine_lite
+_core:
+  default_config_hash: gFQlRUVmgo6XNdpTe6foIloEDOJbK7uPIt4SY_R7xNk
+id: magazine_lite_branding
+theme: magazine_lite
+region: header_top_first
+weight: -6
+provider: null
+plugin: system_branding_block
+settings:
+  id: system_branding_block
+  label: 'Site branding'
+  provider: system
+  label_display: '0'
+  use_site_logo: true
+  use_site_name: true
+  use_site_slogan: true
+visibility: {  }

@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Visual styles for comments section in Magazine Lite.
+ */
+
+/*comments section*/
+.comment-wrapper {
+  margin-top: 45px;
+}
+.comment-wrapper h2.title {
+  font-size: 12px;
+  border-top: none;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  text-align: left;
+  text-transform: uppercase;
+}

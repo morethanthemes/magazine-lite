@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Visual styles for Magazine Lite's subscribe forms.
+ */
+/*subscribe full width*/
+.subscribe h4 {
+  margin-top: 0;
+  margin-bottom: 60px;
+  text-align: center;
+  font-size: 30px;
+}
+.subscribe input[type="text"] {
+  padding-right: 100px;
+}
+.subscribe input[type="submit"] {
+  margin: 0;
+}

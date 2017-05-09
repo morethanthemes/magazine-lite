@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - magazine_lite
+_core:
+  default_config_hash: ChUWAilV6oDjpOkzVDrnAfhz_SZC3w8cG23QNyf81uo
+id: magazine_lite_messages
+theme: magazine_lite
+region: system_messages
+weight: -6
+provider: null
+plugin: system_messages_block
+settings:
+  id: system_messages_block
+  label: 'Status messages'
+  provider: system
+  label_display: '0'
+visibility: {  }

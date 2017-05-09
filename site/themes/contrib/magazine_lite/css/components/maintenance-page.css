@@ -1,0 +1,7 @@
+/**
+ * @file
+ * Visual styles for Magazine Lite's maintenance page.
+ */
+.maintenance-page .main-content__section {
+  padding: 50px 0 80px;
+}

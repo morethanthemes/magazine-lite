@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Styles for Magazine Lite's tooltips.
+ */
+.tooltip-inner {
+  color: #ffffff;
+  font-size: 12px;
+  padding: 3px 10px 2px;
+  border-radius: 0;
+}
+.tooltip--white + .tooltip .tooltip-inner {
+  background-color: #ffffff;
+  color: #2d2d2d;
+}
+.tooltip--white + .tooltip.right .tooltip-arrow {
+  border-right-color: #ffffff;
+}
+.tooltip--white + .tooltip.left .tooltip-arrow {
+  border-left-color: #ffffff;
+}
+.tooltip--white + .tooltip.bottom .tooltip-arrow {
+  border-bottom-color: #ffffff;
+}
+.tooltip--white + .tooltip.top .tooltip-arrow {
+  border-top-color: #ffffff;
+}

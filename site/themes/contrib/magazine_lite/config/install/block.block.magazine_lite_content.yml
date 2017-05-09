@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - magazine_lite
+_core:
+  default_config_hash: r_q_QXafqMXMY87a4vlNDa0PXg7tXyIq1BShaD5qJB0
+id: magazine_lite_content
+theme: magazine_lite
+region: content
+weight: 0
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  provider: system
+  label_display: '0'
+visibility: {  }

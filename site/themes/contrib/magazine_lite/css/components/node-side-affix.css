@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Styles for Magazine Lite's node side affix.
+ */
+#affix.affix {
+  position: fixed;
+  width: 70px;
+}
+#affix.affix > div:first-child {
+  padding-top: 15px;
+}
+#affix.affix .share-links {
+  margin-top: 0;
+}
+#affix.affix-bottom {
+  position: absolute;
+  width: 70px;
+}
+@media (max-width: 480px) {
+  #affix.affix,
+  #affix.affix-bottom {
+    width: 60px;
+  }
+}

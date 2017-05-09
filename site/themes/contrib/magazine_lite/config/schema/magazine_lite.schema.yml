@@ -1,0 +1,5 @@
+# Schema for the configuration files of the Magazine+ theme.
+
+magazine_lite.settings:
+  type: theme_settings
+  label: 'Magazine Lite settings'

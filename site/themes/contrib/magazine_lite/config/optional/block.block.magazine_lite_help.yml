@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - magazine_lite
+_core:
+  default_config_hash: IEayb4QHxMzXoS3iz2PaAbHft7aTLySjf5BMM6iFDM0
+id: magazine_lite_help
+theme: magazine_lite
+region: content
+weight: -7
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  provider: help
+  label_display: '0'
+visibility: {  }

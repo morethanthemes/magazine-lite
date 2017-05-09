@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  theme:
+    - magazine_lite
+_core:
+  default_config_hash: 9OoDSvRzT4me3jF9QIGukqEm0spHrSf42l8PCjMEP2E
+id: magazine_lite_local_actions
+theme: magazine_lite
+region: content
+weight: -7
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  provider: core
+  label_display: '0'
+visibility: {  }

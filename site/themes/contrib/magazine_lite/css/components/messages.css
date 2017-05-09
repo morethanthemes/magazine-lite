@@ -1,0 +1,54 @@
+/**
+ * @file
+ * Visual styles for Magazine Lite's status messages.
+ */
+ .system-messages .col-md-12 {
+  min-height: 0;
+}
+.messages {
+  color: #ffffff;
+  margin: 30px 0;
+  padding: 10px 15px 10px 50px;
+  position: relative;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border-color: transparent;
+  font-size: 14px;
+  font-weight: 600;
+}
+.headings-wide-spacing-enabled .messages {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.messages a {
+  color: #ffffff;
+}
+.messages--status {
+  background: #81b234;
+}
+.messages--error {
+  background: #d02124;
+}
+.messages--warning {
+  background: #de502a;
+}
+
+/*Status messages symbols*/
+.messages:before {
+  font-family: "FontAwesome";
+  line-height: 42px;
+  position: absolute;
+  font-size: 16px;
+  left: 18px;
+  top: 0px;
+  text-align: center;
+}
+.messages--status:before {
+  content: "\f058";
+}
+.messages--error:before {
+  content: "\f057";
+}
+.messages--warning:before {
+  content: "\f071";
+}
