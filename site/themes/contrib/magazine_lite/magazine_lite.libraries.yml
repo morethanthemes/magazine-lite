@@ -8,6 +8,21 @@ bootstrap:
   dependencies:
     - core/jquery
 
+bootstrap-cdn:
+  version: 3.3.7
+  remote: //maxcdn.bootstrapcdn.com/bootstrap/3.3.7
+  css:
+    base:
+      //maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css: { weight: 0 }
+  js:
+    //maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js: {}
+  license:
+    name: The MIT License (MIT)
+    url: //github.com/twbs/bootstrap/blob/master/LICENSE
+    gpl-compatible: true
+  dependencies:
+    - core/jquery
+
 global-styling:
   version: VERSION
   css:
@@ -33,7 +48,6 @@ global-styling:
       css/components/item-list.css: {}
       css/components/inline-list.css: {}
       css/components/image-overlay.css: {}
-      css/components/node-testimonial.css: {}
       css/components/node-links.css: {}
       css/components/separators.css: {}
       css/components/subscribe-forms.css: {}
@@ -41,13 +55,11 @@ global-styling:
       css/components/site-branding.css: {}
       css/components/tables.css: {}
       css/components/tabs.css: {}
-      css/components/team-members.css: {}
       css/components/pills.css: {}
       css/components/progress-bars.css: {}
       css/components/language-switcher.css: {}
       css/components/menu.css: {}
       css/components/username.css: {}
-      css/components/view-archive.css: {}
       css/components/views.css: {}
 
 to-top:

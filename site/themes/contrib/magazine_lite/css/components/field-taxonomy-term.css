@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Visual styles for taxonomy terms in Magazine+.
+ */
+.field--entity-reference-target-type-taxonomy-term,
+.field--entity-reference-target-type-taxonomy-term.field__item {
+  margin: 40px 0;
+}
+.field--entity-reference-target-type-taxonomy-term .field__label,
+.field--entity-reference-target-type-taxonomy-term.field__item .field__label {
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 400;
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  border-bottom-color: #eaeaea;
+}
+.field--entity-reference-target-type-taxonomy-term + .field--entity-reference-target-type-taxonomy-term {
+  margin-top: 0;
+}
+.field--entity-reference-target-type-taxonomy-term.field__item {
+  display: inline-block;
+}
+.field--entity-reference-target-type-taxonomy-term .field__item {
+  display: inline-block;
+  vertical-align: top;
+  margin: 0 25px 10px 0;
+}
+.field--entity-reference-target-type-taxonomy-term .field__item a,
+.field--entity-reference-target-type-taxonomy-term.field__item a {
+  display: block;
+  text-decoration: none;
+}
+.field--entity-reference-target-type-taxonomy-term .field__item a:before,
+.field--entity-reference-target-type-taxonomy-term.field__item a:before {
+  content: "#";
+}

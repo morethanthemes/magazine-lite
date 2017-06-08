@@ -2,10 +2,8 @@ name: Magazine Lite
 type: theme
 base theme: classy
 description: 'A flexible, recolorable theme with many regions and a responsive, mobile-first layout.'
-version: 8.x
 core: 8.x
 libraries:
-  - magazine_lite/bootstrap
   - magazine_lite/fontawesome
   - magazine_lite/global-styling
   - magazine_lite/messages
