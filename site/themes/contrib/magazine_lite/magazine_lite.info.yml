@@ -9,8 +9,8 @@ libraries:
   - magazine_lite/messages
   - magazine_lite/tooltip
   - magazine_lite/count-to-init
-  - magazine_lite/local-stylesheets
   - magazine_lite/smooth-scroll
+  - magazine_lite/local-stylesheets
 libraries-override:
   classy/base:
     css:
