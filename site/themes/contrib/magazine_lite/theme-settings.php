@@ -97,7 +97,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['looknfeel_tab']['looknfeel']['color_scheme'] = array(
+  $form['mtt_settings']['looknfeel_tab']['looknfeel']['color_scheme_ad'] = array(
   '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
@@ -116,7 +116,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['regions_tab']['regions']['animations_state'] = array(
+  $form['mtt_settings']['regions_tab']['regions']['animations_state_ad'] = array(
    '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
@@ -136,7 +136,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['post_tab']['post']['reading_time'] = array(
+  $form['mtt_settings']['post_tab']['post']['reading_time_ad'] = array(
    '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
@@ -156,7 +156,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['layout_tab']['layout_modes']['layout_mode'] = array(
+  $form['mtt_settings']['layout_tab']['layout_modes']['layout_mode_ad'] = array(
    '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
@@ -174,7 +174,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['font_tab']['font']['font_title'] = array(
+  $form['mtt_settings']['font_tab']['font']['font_title_ad'] = array(
    '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
@@ -194,7 +194,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['slideshows_tab']['slideshow']['revolution_slider_fullscreen'] = array(
+  $form['mtt_settings']['slideshows_tab']['slideshow']['revolution_slider_fullscreen_ad'] = array(
    '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
@@ -214,7 +214,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
     '#group' => 'tabs',
   );
 
-  $form['mtt_settings']['google_maps_tab']['google_maps_key'] = array(
+  $form['mtt_settings']['google_maps_tab']['google_maps_key_ad'] = array(
    '#type' => 'item',
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
