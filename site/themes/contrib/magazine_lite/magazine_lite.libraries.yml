@@ -339,7 +339,6 @@ tooltip:
   js:
     js/init/tooltip-init.js: {}
   dependencies:
-    - magazine_lite/bootstrap
     - core/jquery
 
 count-to:
