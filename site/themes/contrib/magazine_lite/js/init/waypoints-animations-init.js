@@ -8,11 +8,11 @@
           var waypoints = thisObject.waypoint(function(direction) {
             var animatedObject = $(this.element);
             setTimeout(function() {
-              animatedObject.addClass("animated in " + animation);
+              animatedObject.addClass("animated " + animation);
             }, 100);
             this.destroy();
           },{
-            offset: "75%"
+            offset: "90%"
           });
         }
       });
