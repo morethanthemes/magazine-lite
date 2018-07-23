@@ -3,7 +3,7 @@ Magazine Lite
 
 This repository contains the Drupal installation that runs at [morethanthemes.com](http://www.morethanthemes.com/drupal-themes/free) and demonstrates the ["Magazine Lite"](https://drupal.org/project/magazine_lite) Drupal theme. We use this repository in order to maintain the above mentioned site and develop the corresponding theme.
 
-You are welcome however to grab this code and have the demonstration site running on your end. By doing this you have the chance to see the ["Magazine Lite" theme in action](http://demo.drupalizing.com/?theme=magazine-lite/site) exactly the way it looks like on our demo.
+You are welcome however to grab this code and have the demonstration site running on your end. By doing this you have the chance to see the ["Magazine Lite" theme in action](http://demo.drupalizing.com/magazine-lite/site) exactly the way it looks like on our demo.
 
 Installation instructions
 --------------
