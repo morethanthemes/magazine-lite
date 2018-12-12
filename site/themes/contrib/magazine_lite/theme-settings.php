@@ -102,7 +102,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-01-looknfeel.jpg" />
    </a></div> ',
   );
@@ -121,7 +121,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-02-region.jpg" />
    </a></div> ',
   );
@@ -141,7 +141,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-03-article.jpg" />
    </a></div> ',
   );
@@ -161,7 +161,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-04-layout.jpg" />
    </a></div> ',
   );
@@ -179,7 +179,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-05-fonts.jpg" />
    </a></div> ',
   );
@@ -199,7 +199,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-06-slideshow.jpg" />
    </a></div> ',
   );
@@ -219,7 +219,7 @@ function magazine_lite_form_system_theme_settings_alter(&$form, &$form_state) {
    '#markup' =>
    '<div class="theme-settings-title">'.t("Available in the Premium version of this theme").'</div>
    <div class="theme-settings-image-wrapper">
-   <a href="http://morethanthemes.com/themes/showcaseplus?utm_source=showcase-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
+   <a href="http://morethanthemes.com/themes/magazineplus?utm_source=magazine-lite-demo&utm_medium=theme-settings&utm_campaign=free-themes" target="_blank">
    <img src="' . base_path() . drupal_get_path('theme', 'magazine_lite') . '/images/premium-09-googlemaps.jpg" />
    </a></div> ',
   );
