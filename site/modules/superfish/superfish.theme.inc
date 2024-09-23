@@ -101,15 +101,14 @@ function template_preprocess_superfish_menu_items(array &$variables) {
     ->getActiveTrailIds($element['#menu_name']);
 
   foreach ($menu as $menu_item) {
+    // Menu link properties.
+    $link = $menu_item->link->getPluginDefinition();
 
     if (NULL !== $menu_item->link &&
-        !($menu_item->link instanceof InaccessibleMenuLink)) {
+        !($menu_item->link instanceof InaccessibleMenuLink) && $link['enabled']) {
 
       $item_class = $link_class = [];
       $multicolumn_wrapper = $multicolumn_column = $multicolumn_content = $nolink = FALSE;
-
-      // Menu link properties.
-      $link = $menu_item->link->getPluginDefinition();
 
       $item = [
         'id'            => $link['id'],
@@ -269,6 +268,7 @@ function template_preprocess_superfish_menu_items(array &$variables) {
       $item['options_menuparent']['attributes']['class'][] = 'menuparent';
       if ($nolink) {
         $item['options_menuparent']['attributes']['class'][] = 'nolink';
+        $item['options']['attributes']['class'][] = 'nolink';
       }
       $link_element = [
         '#type' => 'link',

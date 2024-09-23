@@ -48,7 +48,7 @@ This module requires the following outside of Drupal core:
 -------------
 
     1. Navigate to Administration > Extend and enable the module.
-    2. Go to Administation > Structure > Block layout > select a Place block
+    2. Go to Administration > Structure > Block layout > select a Place block
        button to add a Superfish block to a region.
     3. Use the "Configure" link of the block to configure it accordingly to your
        needs.
@@ -77,3 +77,4 @@ Some design tips:
 -----------
 
 - Nikolay Lobachev - https://www.drupal.org/u/lobsterr
+- Andrei Ivnitskii - https://www.drupal.org/u/ivnish

@@ -123,7 +123,7 @@ waypoints:
     js/waypoints/jquery.waypoints.min.js: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 waypoints-sticky:
@@ -132,7 +132,7 @@ waypoints-sticky:
     js/waypoints/shortcuts/sticky.min.js: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 waypoints-inview:
@@ -148,7 +148,7 @@ waypoints-animations-init:
     js/init/waypoints-animations-init.js: {}
   dependencies:
     - magazine_lite/waypoints
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 magnific-popup:
@@ -167,7 +167,7 @@ magnific-popup-field-image-init:
     js/init/magnific-popup-field-image-init.js: {}
   dependencies:
     - magazine_lite/magnific-popup
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 flexslider:
@@ -198,7 +198,7 @@ flexslider-in-page-init:
   dependencies:
     - magazine_lite/flexslider-global
     - core/drupalSettings
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 owl-carousel:
@@ -363,7 +363,7 @@ count-to-init:
   dependencies:
     - magazine_lite/count-to
     - magazine_lite/waypoints
-    - core/jquery.once
+    - core/once
     - core/drupal
 
 node:

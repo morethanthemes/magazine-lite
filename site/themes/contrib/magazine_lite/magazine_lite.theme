@@ -187,7 +187,7 @@ function magazine_lite_preprocess_page(&$variables) {
     }
   }
   if ($mt_display_fixed_logo) {
-    $variables['mt_logo'] = base_path() . drupal_get_path('theme','magazine_lite') . '/logo.svg';
+    $variables['mt_logo'] = base_path() . \Drupal::service('extension.path.resolver')->getPath('theme','magazine_lite') . '/logo.svg';
   }
 
   $slideout = $variables['page']['slideout'];
@@ -831,11 +831,11 @@ function magazine_lite_preprocess_node(&$variables) {
   }
 
   $variables['posted_ago'] = \Drupal::service('date.formatter')
-    ->formatInterval(REQUEST_TIME - $variables['node']
+    ->formatInterval(\Drupal::time()->getRequestTime() - $variables['node']
         ->getCreatedTime(), $granularity = 1);
 
   $node_content = $variables['content'];
-  $node_content = render($node_content);
+  $node_content = \Drupal::service('renderer')->render($node_content);
   $words = str_word_count(strip_tags($node_content));
   $minutes = floor($words / 275);
   $variables['minutes'] = $minutes;
@@ -864,11 +864,11 @@ function magazine_lite_preprocess_node__article(&$variables) {
 
   // Count the words of article in order to calculate the reading time
   $node_content = $variables['content'];
-  $node_content = render($node_content);
+  $node_content = \Drupal::service('renderer')->render($node_content);
   $words = str_word_count(strip_tags($node_content));
   if (isset($variables['content']['comment'])) {
     $node_comments = $variables['content']['comment'];
-    $node_comments = render($node_comments);
+    $node_comments = \Drupal::service('renderer')->render($node_comments);
     $words = $words - str_word_count(strip_tags($node_comments));
   }
   $variables['minutes'] = floor($words / 275);
