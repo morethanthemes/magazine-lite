@@ -31,7 +31,10 @@ interface FieldItemListInterface extends ListInterface, AccessibleInterface {
    * Gets the entity that field belongs to.
    *
    * @return \Drupal\Core\Entity\FieldableEntityInterface
-   *   The entity object.
+   *   The entity object. If the entity is translatable and a specific
+   *   translation is required, always request it by calling ::getTranslation()
+   *   or ::getUntranslated() as the language of the returned object is not
+   *   defined.
    */
   public function getEntity();
 
@@ -87,7 +90,7 @@ interface FieldItemListInterface extends ListInterface, AccessibleInterface {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function defaultAccess($operation = 'view', AccountInterface $account = NULL);
+  public function defaultAccess($operation = 'view', ?AccountInterface $account = NULL);
 
   /**
    * Filters out empty field items and re-numbers the item deltas.
@@ -171,7 +174,7 @@ interface FieldItemListInterface extends ListInterface, AccessibleInterface {
   /**
    * Returns a renderable array for the field items.
    *
-   * @param array $display_options
+   * @param string|array $display_options
    *   Can be either the name of a view mode, or an array of display settings.
    *   See EntityViewBuilderInterface::viewField() for more information.
    *

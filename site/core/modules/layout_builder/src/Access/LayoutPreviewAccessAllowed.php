@@ -10,13 +10,14 @@ use Drupal\Core\Session\AccountInterface;
  * Accessible class to allow access for inline blocks in the Layout Builder.
  *
  * @internal
+ *   Tagged services are internal.
  */
 class LayoutPreviewAccessAllowed implements AccessibleInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($operation === 'view') {
       return $return_as_object ? AccessResult::allowed() : TRUE;
     }

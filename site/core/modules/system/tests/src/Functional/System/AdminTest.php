@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Core\Menu\MenuTreeParameters;
@@ -13,7 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class AdminTest extends BrowserTestBase {
 
   /**
-   * User account with all available permissions
+   * User account with all available permissions.
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
@@ -27,13 +29,19 @@ class AdminTest extends BrowserTestBase {
   protected $webUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['locale'];
+  protected static $modules = ['locale', 'menu_test'];
 
-  protected function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     // testAdminPages() requires Locale module.
     parent::setUp();
 
@@ -51,17 +59,24 @@ class AdminTest extends BrowserTestBase {
   /**
    * Tests output on administrative listing pages.
    */
-  public function testAdminPages() {
+  public function testAdminPages(): void {
     // Go to Administration.
     $this->drupalGet('admin');
 
     // Verify that all visible, top-level administration links are listed on
     // the main administration page.
-    foreach ($this->getTopLevelMenuLinks() as $item) {
-      $this->assertLink($item->getTitle());
-      $this->assertLinkByHref($item->getUrlObject()->toString());
+    foreach ($this->getTopLevelMenuLinks() as $element) {
+      $item = $element->link;
+      if (!$element->access->isAllowed()) {
+        // If the link is not accessible, it should not be rendered.
+        // @see \Drupal\Core\Menu\MenuLinkTree::buildItems().
+        $this->assertSession()->linkNotExists($item->getTitle());
+        continue;
+      }
+      $this->assertSession()->linkExists($item->getTitle());
+      $this->assertSession()->linkByHrefExists($item->getUrlObject()->toString());
       // The description should appear below the link.
-      $this->assertText($item->getDescription());
+      $this->assertSession()->pageTextContains($item->getDescription());
     }
 
     // For each administrative listing page on which the Locale module appears,
@@ -81,34 +96,34 @@ class AdminTest extends BrowserTestBase {
       // pages.
       $this->drupalLogin($this->adminUser);
       $this->drupalGet($page);
-      $this->assertLinkByHref('admin/config');
-      $this->assertLinkByHref('admin/config/regional/settings');
-      $this->assertLinkByHref('admin/config/regional/date-time');
-      $this->assertLinkByHref('admin/config/regional/language');
-      $this->assertNoLinkByHref('admin/config/regional/language/detection/session');
-      $this->assertNoLinkByHref('admin/config/regional/language/detection/url');
-      $this->assertLinkByHref('admin/config/regional/translate');
+      $this->assertSession()->linkByHrefExists('admin/config');
+      $this->assertSession()->linkByHrefExists('admin/config/regional/settings');
+      $this->assertSession()->linkByHrefExists('admin/config/regional/date-time');
+      $this->assertSession()->linkByHrefExists('admin/config/regional/language');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/language/detection/session');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/language/detection/url');
+      $this->assertSession()->linkByHrefExists('admin/config/regional/translate');
       // On admin/index only, the administrator should also see a "Configure
       // permissions" link for the Locale module.
       if ($page == 'admin/index') {
-        $this->assertLinkByHref("admin/people/permissions#module-locale");
+        $this->assertSession()->linkByHrefExists("admin/people/permissions/module/locale");
       }
 
       // For a less privileged user, verify that there are no links to Locale's
       // primary configuration pages, but a link to the translate page exists.
       $this->drupalLogin($this->webUser);
       $this->drupalGet($page);
-      $this->assertLinkByHref('admin/config');
-      $this->assertNoLinkByHref('admin/config/regional/settings');
-      $this->assertNoLinkByHref('admin/config/regional/date-time');
-      $this->assertNoLinkByHref('admin/config/regional/language');
-      $this->assertNoLinkByHref('admin/config/regional/language/detection/session');
-      $this->assertNoLinkByHref('admin/config/regional/language/detection/url');
-      $this->assertLinkByHref('admin/config/regional/translate');
+      $this->assertSession()->linkByHrefExists('admin/config');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/settings');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/date-time');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/language');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/language/detection/session');
+      $this->assertSession()->linkByHrefNotExists('admin/config/regional/language/detection/url');
+      $this->assertSession()->linkByHrefExists('admin/config/regional/translate');
       // This user cannot configure permissions, so even on admin/index should
       // not see a "Configure permissions" link for the Locale module.
       if ($page == 'admin/index') {
-        $this->assertNoLinkByHref("admin/people/permissions#module-locale");
+        $this->assertSession()->linkByHrefNotExists("admin/people/permissions#module-locale");
       }
     }
   }
@@ -116,7 +131,7 @@ class AdminTest extends BrowserTestBase {
   /**
    * Returns all top level menu links.
    *
-   * @return \Drupal\Core\Menu\MenuLinkInterface[]
+   * @return \Drupal\Core\Menu\MenuLinkTreeElement[]
    */
   protected function getTopLevelMenuLinks() {
     $menu_tree = \Drupal::menuTree();
@@ -129,45 +144,54 @@ class AdminTest extends BrowserTestBase {
       ['callable' => 'menu.default_tree_manipulators:checkAccess'],
       ['callable' => 'menu.default_tree_manipulators:flatten'],
     ];
-    $tree = $menu_tree->transform($tree, $manipulators);
-
-    // Transform the tree to a list of menu links.
-    $menu_links = [];
-    foreach ($tree as $element) {
-      $menu_links[] = $element->link;
-    }
-
-    return $menu_links;
+    return $menu_tree->transform($tree, $manipulators);
   }
 
   /**
-   * Test compact mode.
+   * Tests compact mode.
    */
-  public function testCompactMode() {
+  public function testCompactMode(): void {
     $session = $this->getSession();
 
     // The front page defaults to 'user/login', which redirects to 'user/{user}'
     // for authenticated users. We cannot use '<front>', since this does not
-    // match the redirected url.
+    // match the redirected URL.
     $frontpage_url = 'user/' . $this->adminUser->id();
 
     $this->drupalGet('admin/compact/on');
-    $this->assertResponse(200, 'A valid page is returned after turning on compact mode.');
-    $this->assertUrl($frontpage_url, [], 'The user is redirected to the front page after turning on compact mode.');
-    $this->assertTrue($session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode turns on.');
+    $this->assertSession()->statusCodeEquals(200);
+    // Verify that the user is redirected to the front page after turning on
+    // compact mode.
+    $this->assertSession()->addressEquals($frontpage_url);
+    $this->assertEquals('1', $session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode turns on.');
     $this->drupalGet('admin/compact/on');
-    $this->assertTrue($session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode remains on after a repeat call.');
+    $this->assertEquals('1', $session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode remains on after a repeat call.');
     $this->drupalGet('');
-    $this->assertTrue($session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode persists on new requests.');
+    $this->assertEquals('1', $session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode persists on new requests.');
 
     $this->drupalGet('admin/compact/off');
-    $this->assertResponse(200, 'A valid page is returned after turning off compact mode.');
-    $this->assertUrl($frontpage_url, [], 'The user is redirected to the front page after turning off compact mode.');
+    $this->assertSession()->statusCodeEquals(200);
+    // Verify that the user is redirected to the front page after turning off
+    // compact mode.
+    $this->assertSession()->addressEquals($frontpage_url);
     $this->assertNull($session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode turns off.');
     $this->drupalGet('admin/compact/off');
     $this->assertNull($session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode remains off after a repeat call.');
     $this->drupalGet('');
     $this->assertNull($session->getCookie('Drupal.visitor.admin_compact_mode'), 'Compact mode persists off new requests.');
+  }
+
+  /**
+   * Tests admin config page blocks without descriptions.
+   */
+  public function testConfigBlocksDescription(): void {
+    // Go to Config administration page.
+    $this->drupalGet('admin/config');
+    $this->assertSession()->statusCodeEquals(200);
+    // Validates the content block without description.
+    $this->assertSession()->pageTextContains('Test custom admin block without description');
+    // Validates an empty description block.
+    $this->assertSession()->elementNotExists('xpath', '//dd[@class="list-group__description"][not(text())]');
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\SortArray;
@@ -28,7 +30,7 @@ class SortArrayTest extends TestCase {
    * @param int $expected
    *   The expected output from calling the method.
    */
-  public function testSortByWeightElement($a, $b, $expected) {
+  public function testSortByWeightElement($a, $b, $expected): void {
     $result = SortArray::sortByWeightElement($a, $b);
     $this->assertBothNegativePositiveOrZero($expected, $result);
   }
@@ -42,7 +44,7 @@ class SortArrayTest extends TestCase {
    *
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByWeightElement()
    */
-  public function providerSortByWeightElement() {
+  public static function providerSortByWeightElement() {
     $tests = [];
 
     // Weights set and equal.
@@ -104,7 +106,7 @@ class SortArrayTest extends TestCase {
    * @param int $expected
    *   The expected output from calling the method.
    */
-  public function testSortByWeightProperty($a, $b, $expected) {
+  public function testSortByWeightProperty($a, $b, $expected): void {
     $result = SortArray::sortByWeightProperty($a, $b);
     $this->assertBothNegativePositiveOrZero($expected, $result);
   }
@@ -118,7 +120,7 @@ class SortArrayTest extends TestCase {
    *
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByWeightProperty()
    */
-  public function providerSortByWeightProperty() {
+  public static function providerSortByWeightProperty() {
     $tests = [];
 
     // Weights set and equal.
@@ -180,7 +182,7 @@ class SortArrayTest extends TestCase {
    * @param int $expected
    *   The expected output from calling the method.
    */
-  public function testSortByTitleElement($a, $b, $expected) {
+  public function testSortByTitleElement($a, $b, $expected): void {
     $result = SortArray::sortByTitleElement($a, $b);
     $this->assertBothNegativePositiveOrZero($expected, $result);
   }
@@ -194,7 +196,7 @@ class SortArrayTest extends TestCase {
    *
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByTitleElement()
    */
-  public function providerSortByTitleElement() {
+  public static function providerSortByTitleElement() {
     $tests = [];
 
     // Titles set and equal.
@@ -249,7 +251,7 @@ class SortArrayTest extends TestCase {
    * @param int $expected
    *   The expected output from calling the method.
    */
-  public function testSortByTitleProperty($a, $b, $expected) {
+  public function testSortByTitleProperty($a, $b, $expected): void {
     $result = SortArray::sortByTitleProperty($a, $b);
     $this->assertBothNegativePositiveOrZero($expected, $result);
   }
@@ -263,7 +265,7 @@ class SortArrayTest extends TestCase {
    *
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByTitleProperty()
    */
-  public function providerSortByTitleProperty() {
+  public static function providerSortByTitleProperty() {
     $tests = [];
 
     // Titles set and equal.
@@ -314,10 +316,22 @@ class SortArrayTest extends TestCase {
    *   Expected comparison function return value.
    * @param int $result
    *   Actual comparison function return value.
+   *
+   * @internal
    */
-  protected function assertBothNegativePositiveOrZero($expected, $result) {
-    $this->assertTrue(is_numeric($expected) && is_numeric($result), 'Parameters are numeric.');
-    $this->assertTrue(($expected < 0 && $result < 0) || ($expected > 0 && $result > 0) || ($expected === 0 && $result === 0), 'Numbers are either both negative, both positive or both zero.');
+  protected function assertBothNegativePositiveOrZero(int $expected, int $result): void {
+    $this->assertIsNumeric($expected);
+    $this->assertIsNumeric($result);
+    $message = "Numbers should be both negative, both positive or both zero. Expected: $expected, actual: $result";
+    if ($expected > 0) {
+      $this->assertGreaterThan(0, $result, $message);
+    }
+    elseif ($expected < 0) {
+      $this->assertLessThan(0, $result, $message);
+    }
+    else {
+      $this->assertEquals(0, $result, $message);
+    }
   }
 
 }

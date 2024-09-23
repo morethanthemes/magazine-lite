@@ -2,10 +2,12 @@
 
 namespace Drupal\media\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\StringTextfieldWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\media\Entity\MediaType;
 use Drupal\media\Plugin\media\Source\OEmbedInterface;
 
@@ -15,15 +17,12 @@ use Drupal\media\Plugin\media\Source\OEmbedInterface;
  * @internal
  *   This is an internal part of the oEmbed system and should only be used by
  *   oEmbed-related code in Drupal core.
- *
- * @FieldWidget(
- *   id = "oembed_textfield",
- *   label = @Translation("oEmbed URL"),
- *   field_types = {
- *     "string",
- *   },
- * )
  */
+#[FieldWidget(
+  id: 'oembed_textfield',
+  label: new TranslatableMarkup('oEmbed URL'),
+  field_types: ['string'],
+)]
 class OEmbedWidget extends StringTextfieldWidget {
 
   /**
@@ -36,7 +35,7 @@ class OEmbedWidget extends StringTextfieldWidget {
     $source = $items->getEntity()->getSource();
     $message = $this->t('You can link to media from the following services: @providers', ['@providers' => implode(', ', $source->getProviders())]);
 
-    if (!empty($element['#value']['#description'])) {
+    if (!empty($element['value']['#description'])) {
       $element['value']['#description'] = [
         '#theme' => 'item_list',
         '#items' => [$element['value']['#description'], $message],

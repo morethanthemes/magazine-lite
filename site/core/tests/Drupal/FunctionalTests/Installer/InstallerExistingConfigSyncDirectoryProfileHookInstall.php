@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 /**
@@ -8,6 +10,11 @@ namespace Drupal\FunctionalTests\Installer;
  * @group Installer
  */
 class InstallerExistingConfigSyncDirectoryProfileHookInstall extends InstallerExistingConfigTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -41,7 +48,6 @@ EOF;
   protected function setUpProfile() {
     // This is the form we are testing so wait until the test method to do
     // assertions.
-    return;
   }
 
   /**
@@ -49,7 +55,6 @@ EOF;
    */
   protected function setUpRequirementsProblem() {
     // This form will never be reached.
-    return;
   }
 
   /**
@@ -57,7 +62,6 @@ EOF;
    */
   protected function setUpSettings() {
     // This form will never be reached.
-    return;
   }
 
   /**
@@ -65,7 +69,6 @@ EOF;
    */
   protected function setUpSite() {
     // This form will never be reached.
-    return;
   }
 
   /**
@@ -78,7 +81,7 @@ EOF;
   /**
    * Tests installing from config is not available due to hook_INSTALL().
    */
-  public function testConfigSync() {
+  public function testConfigSync(): void {
     $this->assertSession()->titleEquals('Select an installation profile | Drupal');
     $this->assertSession()->responseNotContains('Use existing configuration');
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 /**
@@ -12,7 +14,12 @@ class UserPathTest extends ViewTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['views', 'user'];
+  protected static $modules = ['views', 'user'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * The test views to use.
@@ -24,7 +31,7 @@ class UserPathTest extends ViewTestBase {
   /**
    * Tests if the login page is still available when using a wildcard path.
    */
-  public function testUserLoginPage() {
+  public function testUserLoginPage(): void {
     $this->drupalGet('user/login');
     $this->assertSession()->statusCodeEquals(200);
   }

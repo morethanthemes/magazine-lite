@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -17,11 +19,9 @@ abstract class ImageFieldTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'image',
     'field_ui',
@@ -29,7 +29,7 @@ abstract class ImageFieldTestBase extends WebDriverTestBase {
   ];
 
   /**
-   * An user with permissions to administer content types and image styles.
+   * A user with permissions to administer content types and image styles.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -38,7 +38,7 @@ abstract class ImageFieldTestBase extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create Basic page and Article node types.

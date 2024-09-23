@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -19,7 +21,7 @@ class FilterHtmlTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $configuration['settings'] = [
       'allowed_html' => '<a href> <p> <em> <strong> <cite> <blockquote> <code class="pretty boring align-*"> <ul alpaca-*="wooly-* strong"> <ol llama-*> <li> <dl> <dt> <dd> <br> <h3 id>',
@@ -37,28 +39,26 @@ class FilterHtmlTest extends UnitTestCase {
    *
    * @param string $html
    *   Input HTML.
-   * @param array $expected
+   * @param string $expected
    *   The expected output string.
    */
-  public function testfilterAttributes($html, $expected) {
+  public function testFilterAttributes($html, $expected): void {
     $this->assertSame($expected, $this->filter->filterAttributes($html));
   }
 
   /**
-   * Provides data for testfilterAttributes.
+   * Provides data for testFilterAttributes.
    *
    * @return array
    *   An array of test data.
    */
-  public function providerFilterAttributes() {
+  public static function providerFilterAttributes() {
     return [
       ['<a href="/blog" title="Blog">Blog</a>', '<a href="/blog">Blog</a>'],
       ['<p dir="rtl" />', '<p dir="rtl"></p>'],
       ['<p dir="bogus" />', '<p></p>'],
       ['<p id="first" />', '<p></p>'],
-      // The addition of xml:lang isn't especially desired, but is still valid
-      // HTML5. See https://www.drupal.org/node/1333730.
-      ['<p id="first" lang="en">text</p>', '<p lang="en" xml:lang="en">text</p>'],
+      ['<p id="first" lang="en">text</p>', '<p lang="en">text</p>'],
       ['<p style="display: none;" />', '<p></p>'],
       ['<code class="pretty invalid">foreach ($a as $b) {}</code>', '<code class="pretty">foreach ($a as $b) {}</code>'],
       ['<code class="boring pretty">foreach ($a as $b) {}</code>', '<code class="boring pretty">foreach ($a as $b) {}</code>'],
@@ -82,7 +82,7 @@ class FilterHtmlTest extends UnitTestCase {
   /**
    * @covers ::setConfiguration
    */
-  public function testSetConfiguration() {
+  public function testSetConfiguration(): void {
     $configuration['settings'] = [
       // New lines and spaces are replaced with a single space.
       'allowed_html' => "<a>  <br>\r\n  <p>",

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
@@ -16,12 +18,12 @@ class LanguageContentTaxonomyVocabularySettingsTest extends MigrateSqlSourceTest
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['taxonomy', 'language', 'migrate_drupal'];
+  protected static $modules = ['taxonomy', 'language', 'migrate_drupal'];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.
@@ -75,7 +77,33 @@ class LanguageContentTaxonomyVocabularySettingsTest extends MigrateSqlSourceTest
       ],
     ];
 
+    // Test without a language column in the database.
+    $tests[1] = $tests[0];
+    foreach ($tests[1]['source_data']['vocabulary'] as $key => $row) {
+      unset($tests[1]['source_data']['vocabulary'][$key]['language']);
+    }
+    $tests[1]['source_data']['variable'] = [
+      [
+        'name' => 'i18ntaxonomy_vocabulary',
+        'value' => 'a:4:{i:1;s:1:"0";i:2;s:1:"0";i:3;s:1:"3";i:5;s:1:"1";}',
+      ],
+    ];
+    $tests[1]['expected_data'] = [
+      [
+        'vid' => 1,
+        'state' => 0,
+      ],
+      [
+        'vid' => 2,
+        'state' => 0,
+      ],
+    ];
+
+    // Test without a i18ntaxonomy_vocabulary variable.
+    $tests[2] = $tests[1];
+    unset($tests[2]['source_data']['variable']);
     return $tests;
+
   }
 
 }

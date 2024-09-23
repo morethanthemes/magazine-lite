@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -17,11 +19,14 @@ use Drupal\field\Entity\FieldStorageConfig;
 class TermAutocompleteTest extends TaxonomyTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['node'];
+  protected static $modules = ['node'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * The vocabulary.
@@ -61,7 +66,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a vocabulary.
@@ -93,7 +98,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
 
     // Create a taxonomy_term_reference field on the article Content Type that
     // uses a taxonomy_autocomplete widget.
-    $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->fieldName = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $this->fieldName,
       'entity_type' => 'node',
@@ -132,10 +137,10 @@ class TermAutocompleteTest extends TaxonomyTestBase {
     $this->adminUser = $this->drupalCreateUser(['create article content']);
     $this->drupalLogin($this->adminUser);
 
-    // Retrieve the autocomplete url.
+    // Retrieve the autocomplete URL.
     $this->drupalGet('node/add/article');
-    $result = $this->xpath('//input[@name="' . $this->fieldName . '[0][target_id]"]');
-    $this->autocompleteUrl = $this->getAbsoluteUrl($result[0]->getAttribute('data-autocomplete-path'));
+    $field = $this->assertSession()->fieldExists("{$this->fieldName}[0][target_id]");
+    $this->autocompleteUrl = $this->getAbsoluteUrl($field->getAttribute('data-autocomplete-path'));
   }
 
   /**
@@ -144,7 +149,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    * @param string|\Drupal\Core\Url $path
    *   Drupal path or URL to load into Mink controlled browser.
    * @param array $options
-   *   (optional) Options to be forwarded to the url generator.
+   *   (optional) Options to be forwarded to the URL generator.
    * @param string[] $headers
    *   (optional) An array containing additional HTTP request headers.
    *
@@ -161,27 +166,27 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    *
    * @see \Drupal\taxonomy\Controller\TermAutocompleteController::autocomplete()
    */
-  public function testAutocompleteCountResults() {
+  public function testAutocompleteCountResults(): void {
     // Test that no matching term found.
     $data = $this->drupalGetJson(
       $this->autocompleteUrl,
       ['query' => ['q' => 'zzz']]
     );
-    $this->assertTrue(empty($data), 'Autocomplete returned no results');
+    $this->assertEmpty($data, 'Autocomplete returned no results');
 
     // Test that only one matching term found, when only one matches.
     $data = $this->drupalGetJson(
       $this->autocompleteUrl,
       ['query' => ['q' => 'aaa 10']]
     );
-    $this->assertEqual(1, count($data), 'Autocomplete returned 1 result');
+    $this->assertCount(1, $data, 'Autocomplete returned 1 result');
 
     // Test the correct number of matches when multiple are partial matches.
     $data = $this->drupalGetJson(
       $this->autocompleteUrl,
       ['query' => ['q' => 'aaa 1']]
     );
-    $this->assertEqual(3, count($data), 'Autocomplete returned 3 results');
+    $this->assertCount(3, $data, 'Autocomplete returned 3 results');
 
     // Tests that only 10 results are returned, even if there are more than 10
     // matches.
@@ -189,7 +194,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
       $this->autocompleteUrl,
       ['query' => ['q' => 'aaa']]
     );
-    $this->assertEqual(10, count($data), 'Autocomplete returned only 10 results (for over 10 matches)');
+    $this->assertCount(10, $data, 'Autocomplete returned only 10 results (for over 10 matches)');
   }
 
   /**
@@ -197,7 +202,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    *
    * @see \Drupal\taxonomy\Controller\TermAutocompleteController::autocomplete()
    */
-  public function testAutocompleteOrderedResults() {
+  public function testAutocompleteOrderedResults(): void {
     $expectedResults = [
       'aaa 10 bbb',
       'aaa 11 bbb',
@@ -223,7 +228,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
       ['query' => ['q' => 'bbb']]
     );
 
-    $this->assertIdentical($expected, $data);
+    $this->assertSame($expected, $data);
   }
 
 }

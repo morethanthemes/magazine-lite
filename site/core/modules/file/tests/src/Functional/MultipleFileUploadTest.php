@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -14,12 +16,17 @@ class MultipleFileUploadTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['file'];
+  protected static $modules = ['file'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     $admin = $this->drupalCreateUser(['administer themes']);
@@ -29,9 +36,9 @@ class MultipleFileUploadTest extends BrowserTestBase {
   /**
    * Tests multiple file field with all file extensions.
    */
-  public function testMultipleFileFieldWithAllFileExtensions() {
+  public function testMultipleFileFieldWithAllFileExtensions(): void {
     $theme = 'test_theme_settings';
-    \Drupal::service('theme_handler')->install([$theme]);
+    \Drupal::service('theme_installer')->install([$theme]);
     $this->drupalGet("admin/appearance/settings/$theme");
 
     $edit = [];
@@ -42,7 +49,7 @@ class MultipleFileUploadTest extends BrowserTestBase {
       $edit["files[multi_file][$i]"] = $file_path;
     }
 
-    // @todo: Replace after https://www.drupal.org/project/drupal/issues/2917885
+    // @todo Replace after https://www.drupal.org/project/drupal/issues/2917885
     $this->drupalGet("admin/appearance/settings/$theme");
     $submit_xpath = $this->assertSession()->buttonExists('Save configuration')->getXpath();
     $client = $this->getSession()->getDriver()->getClient();
@@ -50,10 +57,10 @@ class MultipleFileUploadTest extends BrowserTestBase {
     $client->request($form->getMethod(), $form->getUri(), $form->getPhpValues(), $edit);
 
     $page = $this->getSession()->getPage();
-    $this->assertNotContains('Only files with the following extensions are allowed', $page->getContent());
-    $this->assertContains('The configuration options have been saved.', $page->getContent());
-    $this->assertContains('file1.wtf', $page->getContent());
-    $this->assertContains('file2.wtf', $page->getContent());
+    $this->assertStringNotContainsString('Only files with the following extensions are allowed', $page->getContent());
+    $this->assertStringContainsString('The configuration options have been saved.', $page->getContent());
+    $this->assertStringContainsString('file1.wtf', $page->getContent());
+    $this->assertStringContainsString('file2.wtf', $page->getContent());
   }
 
 }

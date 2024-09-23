@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Core\Form\FormState;
@@ -15,27 +17,27 @@ class FormErrorHandlerTest extends UnitTestCase {
   /**
    * The form error handler.
    *
-   * @var \Drupal\Core\Form\FormErrorHandler|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Form\FormErrorHandler|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $formErrorHandler;
 
   /**
    * The messenger.
    *
-   * @var \Drupal\Core\Messenger\MessengerInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Messenger\MessengerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $messenger;
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->messenger = $this->createMock(MessengerInterface::class);
 
     $this->formErrorHandler = $this->getMockBuilder('Drupal\Core\Form\FormErrorHandler')
-      ->setMethods(['messenger'])
+      ->onlyMethods(['messenger'])
       ->getMock();
 
     $this->formErrorHandler->expects($this->atLeastOnce())
@@ -47,25 +49,24 @@ class FormErrorHandlerTest extends UnitTestCase {
    * @covers ::handleFormErrors
    * @covers ::displayErrorMessages
    */
-  public function testDisplayErrorMessages() {
-    $this->messenger->expects($this->at(0))
+  public function testDisplayErrorMessages(): void {
+    $messages = [
+      'invalid',
+      'invalid',
+      'invalid',
+      'no title given',
+      'element is invisible',
+      'this missing element is invalid',
+    ];
+
+    $this->messenger->expects($this->exactly(count($messages)))
       ->method('addMessage')
-      ->with('invalid', 'error');
-    $this->messenger->expects($this->at(1))
-      ->method('addMessage')
-      ->with('invalid', 'error');
-    $this->messenger->expects($this->at(2))
-      ->method('addMessage')
-      ->with('invalid', 'error');
-    $this->messenger->expects($this->at(3))
-      ->method('addMessage')
-      ->with('no title given', 'error');
-    $this->messenger->expects($this->at(4))
-      ->method('addMessage')
-      ->with('element is invisible', 'error');
-    $this->messenger->expects($this->at(5))
-      ->method('addMessage')
-      ->with('this missing element is invalid', 'error');
+      ->with(
+        $this->callback(function (string $message) use (&$messages): bool {
+          return array_shift($messages) === $message;
+        }),
+        'error',
+      );
 
     $form = [
       '#parents' => [],
@@ -124,7 +125,7 @@ class FormErrorHandlerTest extends UnitTestCase {
    * @covers ::handleFormErrors
    * @covers ::setElementErrorsFromFormState
    */
-  public function testSetElementErrorsFromFormState() {
+  public function testSetElementErrorsFromFormState(): void {
     $form = [
       '#parents' => [],
       '#array_parents' => [],

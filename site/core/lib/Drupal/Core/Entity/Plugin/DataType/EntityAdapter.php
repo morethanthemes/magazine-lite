@@ -4,7 +4,10 @@ namespace Drupal\Core\Entity\Plugin\DataType;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Plugin\DataType\Deriver\EntityDeriver;
 use Drupal\Core\Entity\TypedData\EntityDataDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\Attribute\DataType;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\TypedData;
@@ -17,15 +20,14 @@ use Drupal\Core\TypedData\TypedData;
  *
  * In addition to the "entity" data type, this exposes derived
  * "entity:$entity_type" and "entity:$entity_type:$bundle" data types.
- *
- * @DataType(
- *   id = "entity",
- *   label = @Translation("Entity"),
- *   description = @Translation("All kind of entities, e.g. nodes, comments or users."),
- *   deriver = "\Drupal\Core\Entity\Plugin\DataType\Deriver\EntityDeriver",
- *   definition_class = "\Drupal\Core\Entity\TypedData\EntityDataDefinition"
- * )
  */
+#[DataType(
+  id: "entity",
+  label: new TranslatableMarkup("Entity"),
+  description: new TranslatableMarkup("All kind of entities, e.g. nodes, comments or users."),
+  definition_class: EntityDataDefinition::class,
+  deriver: EntityDeriver::class
+)]
 class EntityAdapter extends TypedData implements \IteratorAggregate, ComplexDataInterface {
 
   /**
@@ -160,8 +162,22 @@ class EntityAdapter extends TypedData implements \IteratorAggregate, ComplexData
   /**
    * {@inheritdoc}
    */
+  #[\ReturnTypeWillChange]
   public function getIterator() {
     return $this->entity instanceof \IteratorAggregate ? $this->entity->getIterator() : new \ArrayIterator([]);
+  }
+
+  /**
+   * Returns the wrapped entity object.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   The wrapped entity object. If the entity is translatable and a specific
+   *   translation is required, always request it by calling ::getTranslation()
+   *   or ::getUntranslated() as the language of the returned object is not
+   *   defined.
+   */
+  public function getEntity() {
+    return $this->entity;
   }
 
 }

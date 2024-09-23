@@ -3,6 +3,7 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -15,21 +16,20 @@ use Drupal\Core\Render\Element;
  *
  * Example usage:
  * @code
- * $form['email'] = array(
+ * $form['email'] = [
  *   '#type' => 'email',
  *   '#title' => $this->t('Email'),
  *   '#pattern' => '*@example.com',
- * );
- * @end
+ * ];
+ * @endcode
  *
- * @see \Drupal\Core\Render\Element\Render\Textfield
- *
- * @FormElement("email")
+ * @see \Drupal\Core\Render\Element\Textfield
  */
-class Email extends FormElement {
+#[FormElement('email')]
+class Email extends FormElementBase {
 
   /**
-   * Defines the max length for an email address
+   * Defines the max length for an email address.
    *
    * The maximum length of an email address is 254 characters. RFC 3696
    * specifies a total length of 320 characters, but mentions that
@@ -44,7 +44,7 @@ class Email extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#size' => 60,
@@ -76,7 +76,7 @@ class Email extends FormElement {
     $form_state->setValueForElement($element, $value);
 
     if ($value !== '' && !\Drupal::service('email.validator')->isValid($value)) {
-      $form_state->setError($element, t('The email address %mail is not valid.', ['%mail' => $value]));
+      $form_state->setError($element, t('The email address %mail is not valid. Use the format user@example.com.', ['%mail' => $value]));
     }
   }
 

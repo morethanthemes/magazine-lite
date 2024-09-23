@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Path\CurrentPathStack;
@@ -22,7 +24,7 @@ class RouterTest extends UnitTestCase {
   /**
    * @covers ::applyFitOrder
    */
-  public function testMatchesWithDifferentFitOrder() {
+  public function testMatchesWithDifferentFitOrder(): void {
     $route_provider = $this->prophesize(RouteProviderInterface::class);
 
     $route_collection = new RouteCollection();
@@ -42,9 +44,11 @@ class RouterTest extends UnitTestCase {
     $current_path_stack = $this->prophesize(CurrentPathStack::class);
     $router = new Router($route_provider->reveal(), $current_path_stack->reveal(), $url_generator->reveal());
 
-    $request_context = $this->prophesize(RequestContext::class);
-    $request_context->getScheme()->willReturn('http');
-    $router->setContext($request_context->reveal());
+    $request_context = $this->createMock(RequestContext::class);
+    $request_context->expects($this->any())
+      ->method('getScheme')
+      ->willReturn('http');
+    $router->setContext($request_context);
 
     $current_path_stack->getPath(Argument::any())->willReturn('/user/1');
     $result = $router->match('/user/1');

@@ -3,15 +3,15 @@
 namespace Drupal\file\Plugin\migrate\destination;
 
 use Drupal\Core\Field\Plugin\Field\FieldType\UriItem;
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\migrate\Row;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
 
 /**
- * @MigrateDestination(
- *   id = "entity:file"
- * )
+ * Provides migrate destination plugin for File entities.
  */
+#[MigrateDestination('entity:file')]
 class EntityFile extends EntityContentBase {
 
   /**
@@ -45,7 +45,7 @@ class EntityFile extends EntityContentBase {
   protected function processStubRow(Row $row) {
     // We stub the uri value ourselves so we can create a real stub file for it.
     if (!$row->getDestinationProperty('uri')) {
-      $field_definitions = $this->entityManager
+      $field_definitions = $this->entityFieldManager
         ->getFieldDefinitions($this->storage->getEntityTypeId(),
           $this->getKey('bundle'));
       $value = UriItem::generateSampleValue($field_definitions['uri']);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Kernel;
 
 use Drupal\file\Entity\File;
@@ -18,11 +20,9 @@ abstract class MediaKernelTestBase extends KernelTestBase {
   use MediaTypeCreationTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'media',
     'media_test_source',
     'image',
@@ -56,13 +56,12 @@ abstract class MediaKernelTestBase extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installSchema('file', 'file_usage');
-    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('media');
     $this->installConfig(['field', 'system', 'image', 'file', 'media']);
 
@@ -85,7 +84,7 @@ abstract class MediaKernelTestBase extends KernelTestBase {
    * @param string $filename
    *   String filename with extension.
    * @param \Drupal\media\MediaTypeInterface $media_type
-   *   The the media type.
+   *   The media type.
    *
    * @return \Drupal\media\Entity\Media
    *   A media item.

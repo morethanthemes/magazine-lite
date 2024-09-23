@@ -3,23 +3,28 @@
 namespace Drupal\system_test\Controller;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableRedirectResponse;
 use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Routing\LocalRedirectResponse;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\Core\Lock\LockBackendInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller routines for system_test routes.
  */
-class SystemTestController extends ControllerBase {
+class SystemTestController extends ControllerBase implements TrustedCallbackInterface {
 
   /**
    * The lock service.
@@ -69,26 +74,29 @@ class SystemTestController extends ControllerBase {
    *   The renderer.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch|null $killSwitch
+   *   The page cache kill switch. This is here to test nullable types with
+   *   \Drupal\Core\DependencyInjection\AutowireTrait::create().
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch|null $killSwitch2
+   *   The page cache kill switch. This is here to test nullable types with
+   *   \Drupal\Core\DependencyInjection\AutowireTrait::create().
    */
-  public function __construct(LockBackendInterface $lock, LockBackendInterface $persistent_lock, AccountInterface $current_user, RendererInterface $renderer, MessengerInterface $messenger) {
+  public function __construct(
+    #[Autowire(service: 'lock')]
+    LockBackendInterface $lock,
+    #[Autowire(service: 'lock.persistent')]
+    LockBackendInterface $persistent_lock,
+    AccountInterface $current_user,
+    RendererInterface $renderer,
+    MessengerInterface $messenger,
+    public ?KillSwitch $killSwitch = NULL,
+    public KillSwitch|null $killSwitch2 = NULL,
+  ) {
     $this->lock = $lock;
     $this->persistentLock = $persistent_lock;
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
     $this->messenger = $messenger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('lock'),
-      $container->get('lock.persistent'),
-      $container->get('current_user'),
-      $container->get('renderer'),
-      $container->get('messenger')
-    );
   }
 
   /**
@@ -141,6 +149,27 @@ class SystemTestController extends ControllerBase {
 
     // Test auto-escape of non safe strings.
     $this->messenger->addStatus('<em>This<span>markup will be</span> escaped</em>.');
+
+    return [];
+  }
+
+  /**
+   * Sets messages for testing the WebAssert methods related to messages.
+   *
+   * @return array
+   *   Empty array, we just need the messages.
+   */
+  public function statusMessagesForAssertions(): array {
+    // Add a simple message of each type.
+    $this->messenger->addMessage('My Status Message', 'status');
+    $this->messenger->addMessage('My Error Message', 'error');
+    $this->messenger->addMessage('My Warning Message', 'warning');
+
+    // Add messages with special characters and/or markup.
+    $this->messenger->addStatus('This has " in the middle');
+    $this->messenger->addStatus('This has \' in the middle');
+    $this->messenger->addStatus('<em>This<span>markup will be</span> escaped</em>.');
+    $this->messenger->addStatus('Peaches & cream');
 
     return [];
   }
@@ -219,7 +248,7 @@ class SystemTestController extends ControllerBase {
   }
 
   /**
-   * Set cache tag on on the returned render array.
+   * Set cache tag on the returned render array.
    */
   public function system_test_cache_tags_page() {
     $build['main'] = [
@@ -237,7 +266,7 @@ class SystemTestController extends ControllerBase {
   /**
    * Set cache max-age on the returned render array.
    */
-  public function system_test_cache_maxage_page() {
+  public function system_test_cache_max_age_page() {
     $build['main'] = [
       '#cache' => ['max-age' => 90],
       'message' => [
@@ -274,7 +303,7 @@ class SystemTestController extends ControllerBase {
     $response = new CacheableResponse();
     $response->headers->set($query['name'], $query['value']);
     $response->getCacheableMetadata()->addCacheContexts(['url.query_args:name', 'url.query_args:value']);
-    $response->setContent($this->t('The following header was set: %name: %value', ['%name' => $query['name'], '%value' => $query['value']]));
+    $response->setContent((string) $this->t('The following header was set: %name: %value', ['%name' => $query['name'], '%value' => $query['value']]));
 
     return $response;
   }
@@ -282,7 +311,7 @@ class SystemTestController extends ControllerBase {
   /**
    * A simple page callback that uses a plain Symfony response object.
    */
-  public function respondWithReponse(Request $request) {
+  public function respondWithResponse(Request $request) {
     return new Response('test');
   }
 
@@ -296,7 +325,7 @@ class SystemTestController extends ControllerBase {
   /**
    * A simple page callback that uses a CacheableResponse object.
    */
-  public function respondWithCacheableReponse(Request $request) {
+  public function respondWithCacheableResponse(Request $request) {
     return new CacheableResponse('test');
   }
 
@@ -310,8 +339,8 @@ class SystemTestController extends ControllerBase {
     // the exception message can not be tested.
     // @see _drupal_shutdown_function()
     // @see \Drupal\system\Tests\System\ShutdownFunctionsTest
-    if (function_exists('fastcgi_finish_request')) {
-      return ['#markup' => 'The function fastcgi_finish_request exists when serving the request.'];
+    if (function_exists('fastcgi_finish_request') || ob_get_status()) {
+      return ['#markup' => 'The response will flush before shutdown functions are called.'];
     }
     return [];
   }
@@ -396,6 +425,42 @@ class SystemTestController extends ControllerBase {
    */
   public function getCacheableResponseWithCustomCacheControl() {
     return new CacheableResponse('Foo', 200, ['Cache-Control' => 'bar']);
+  }
+
+  /**
+   * Returns a CacheableRedirectResponse with the given status code.
+   */
+  public function respondWithCacheableRedirectResponse(int $status_code): CacheableRedirectResponse {
+    return new CacheableRedirectResponse('/llamas', $status_code);
+  }
+
+  /**
+   * Returns a LocalRedirectResponse with the given status code.
+   */
+  public function respondWithLocalRedirectResponse(int $status_code): LocalRedirectResponse {
+    return new LocalRedirectResponse('/llamas', $status_code);
+  }
+
+  /**
+   * Returns a TrustedRedirectResponse with the given status code.
+   */
+  public function respondWithTrustedRedirectResponse(int $status_code): TrustedRedirectResponse {
+    return new TrustedRedirectResponse('/llamas', $status_code);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return ['preRenderCacheTags'];
+  }
+
+  /**
+   * Use a plain Symfony response object to output the current install_profile.
+   */
+  public function getInstallProfile() {
+    $install_profile = \Drupal::installProfile() ?: 'NONE';
+    return new Response('install_profile: ' . $install_profile);
   }
 
 }

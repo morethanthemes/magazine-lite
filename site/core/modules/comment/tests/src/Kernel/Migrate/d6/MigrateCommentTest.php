@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate\d6;
 
 use Drupal\comment\Entity\Comment;
@@ -20,7 +22,7 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'comment',
     'content_translation',
     'language',
@@ -30,7 +32,7 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installEntitySchema('node');
@@ -38,9 +40,6 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
     $this->installSchema('comment', ['comment_entity_statistics']);
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['comment']);
-
-    // The entity.node.canonical route must exist when the RDF hook is called.
-    $this->container->get('router.builder')->rebuild();
 
     $this->migrateContent();
     $this->executeMigrations([
@@ -60,12 +59,12 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
   /**
    * Tests the migrated comments.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $comment = Comment::load(1);
     $this->assertSame('The first comment.', $comment->getSubject());
     $this->assertSame('The first comment body.', $comment->comment_body->value);
     $this->assertSame('filtered_html', $comment->comment_body->format);
-    $this->assertSame(NULL, $comment->pid->target_id);
+    $this->assertNull($comment->pid->target_id);
     $this->assertSame('1', $comment->getCommentedEntityId());
     $this->assertSame('node', $comment->getCommentedEntityTypeId());
     $this->assertSame('en', $comment->language()->getId());
@@ -87,7 +86,7 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
 
     $comment = Comment::load(3);
     $this->assertSame('The second comment.', $comment->subject->value);
-    $this->assertSame(NULL, $comment->pid->target_id);
+    $this->assertNull($comment->pid->target_id);
     $this->assertSame('203.0.113.3', $comment->getHostname());
 
     $node = $comment->getCommentedEntity();

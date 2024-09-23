@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+
+// cspell:ignore optionwidgets selectlist objectid objectindex plid
 
 /**
  * Tests the field option translation source plugin.
@@ -15,12 +19,12 @@ class FieldOptionTranslationTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['field', 'migrate_drupal'];
+  protected static $modules = ['field', 'migrate_drupal'];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $test = [];
 
     // The source data.
@@ -110,6 +114,14 @@ class FieldOptionTranslationTest extends MigrateSqlSourceTestBase {
         'objectindex' => 0,
         'format' => 0,
       ],
+      [
+        'lid' => 22,
+        'objectid' => 'field_test_integer_selectlist',
+        'type' => 'field',
+        'property' => 'option_0',
+        'objectindex' => 0,
+        'format' => 0,
+      ],
     ];
     $test[0]['source_data']['locales_target'] = [
       [
@@ -146,7 +158,7 @@ class FieldOptionTranslationTest extends MigrateSqlSourceTestBase {
       ],
     ];
 
-    $test[0]['expected_results'] = [
+    $test[0]['expected_data'] = [
       [
         'field_name' => 'field_test_text_single_checkbox',
         'type' => 'text',
@@ -236,6 +248,14 @@ class FieldOptionTranslationTest extends MigrateSqlSourceTestBase {
         'i18n_status' => 0,
       ],
     ];
+
+    // Change the name of the locale_target i18n status field.
+    $test[1] = $test[0];
+    foreach ($test[1]['source_data']['locales_target'] as &$lt) {
+      $lt['status'] = $lt['i18n_status'];
+      unset($lt['i18n_status']);
+    }
+
     return $test;
   }
 

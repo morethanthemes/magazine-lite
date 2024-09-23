@@ -3,17 +3,26 @@
 namespace Drupal\image\Plugin\migrate\field\d7;
 
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate_drupal\Attribute\MigrateField;
 use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 
-/**
- * @MigrateField(
- *   id = "image",
- *   core = {7},
- *   source_module = "image",
- *   destination_module = "image"
- * )
- */
+#[MigrateField(
+  id: 'image',
+  core: [7],
+  source_module: 'image',
+  destination_module: 'image',
+)]
 class ImageField extends FieldPluginBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldWidgetMap() {
+    return [
+      'image' => 'image_default',
+      'image_miw' => 'image_image',
+    ];
+  }
 
   /**
    * {@inheritdoc}

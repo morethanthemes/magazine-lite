@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Kernel\Plugin\migrate\process;
 
 use Drupal\filter\Plugin\migrate\process\FilterID;
@@ -19,21 +21,21 @@ class FilterIdTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['filter'];
+  protected static $modules = ['filter'];
 
   /**
    * The mocked MigrateExecutable.
    *
-   * @var \Drupal\migrate\MigrateExecutableInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\migrate\MigrateExecutableInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $executable;
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
-    $this->executable = $this->getMock(MigrateExecutableInterface::class);
+    $this->executable = $this->createMock(MigrateExecutableInterface::class);
   }
 
   /**
@@ -46,12 +48,15 @@ class FilterIdTest extends KernelTestBase {
    * @param string $invalid_id
    *   (optional) The invalid plugin ID which is expected to be logged by the
    *   MigrateExecutable object.
+   * @param bool $stop_pipeline
+   *   (optional) Set to TRUE if we expect the filter to be skipped because it
+   *   is a transformation-only filter.
    *
    * @dataProvider provideFilters
    *
    * @covers ::transform
    */
-  public function testTransform($value, $expected_value, $invalid_id = NULL) {
+  public function testTransform($value, $expected_value, $invalid_id = NULL, $stop_pipeline = FALSE): void {
     $configuration = [
       'bypass' => TRUE,
       'map' => [
@@ -61,12 +66,22 @@ class FilterIdTest extends KernelTestBase {
     ];
     $plugin = FilterID::create($this->container, $configuration, 'filter_id', []);
 
+    if ($stop_pipeline) {
+      $this->executable
+        ->expects($this->exactly(1))
+        ->method('saveMessage')
+        ->with(
+          sprintf('Filter %s could not be mapped to an existing filter plugin; omitted since it is a transformation-only filter. Install and configure a successor after the migration.', $value),
+          MigrationInterface::MESSAGE_INFORMATIONAL
+        );
+    }
+
     if (isset($invalid_id)) {
       $this->executable
         ->expects($this->exactly(1))
         ->method('saveMessage')
         ->with(
-          'Filter ' . $invalid_id . ' could not be mapped to an existing filter plugin; defaulting to filter_null.',
+          sprintf('Filter %s could not be mapped to an existing filter plugin; defaulting to %s and dropping all settings. Either redo the migration with the module installed that provides an equivalent filter, or modify the text format after the migration to remove this filter if it is no longer necessary.', $invalid_id, $expected_value),
           MigrationInterface::MESSAGE_WARNING
         );
     }
@@ -75,17 +90,18 @@ class FilterIdTest extends KernelTestBase {
     $output_value = $plugin->transform($value, $this->executable, $row, 'foo');
 
     $this->assertSame($expected_value, $output_value);
+    $this->assertSame($stop_pipeline, $plugin->isPipelineStopped());
   }
 
   /**
    * Provides filter ids for testing transformations.
    *
    * @return array
-   *   Formatted as $source_id, $tranformed_id, $invalid_id.
+   *   Formatted as $source_id, $transformed_id, $invalid_id.
    *   When $invalid_id is provided the transformation should fail with the
    *   supplied id.
    */
-  public function provideFilters() {
+  public static function provideFilters() {
     return [
       'filter ID mapped to plugin that exists' => [
         'foo',
@@ -109,6 +125,16 @@ class FilterIdTest extends KernelTestBase {
         ['filter', 1],
         'filter_null',
         'filter:1',
+      ],
+      'transformation-only D7 contrib filter' => [
+        'editor_align',
+        NULL,
+        NULL,
+        TRUE,
+      ],
+      'non-transformation-only D7 contrib filter' => [
+        'bbcode',
+        'filter_null',
       ],
     ];
   }

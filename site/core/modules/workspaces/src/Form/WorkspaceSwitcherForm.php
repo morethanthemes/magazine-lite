@@ -5,6 +5,7 @@ namespace Drupal\workspaces\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\workspaces\WorkspaceAccessException;
 use Drupal\workspaces\WorkspaceManagerInterface;
@@ -13,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a form that activates a different workspace.
  */
-class WorkspaceSwitcherForm extends FormBase implements WorkspaceFormInterface {
+class WorkspaceSwitcherForm extends FormBase implements WorkspaceSafeFormInterface {
 
   /**
    * The workspace manager.
@@ -81,12 +82,14 @@ class WorkspaceSwitcherForm extends FormBase implements WorkspaceFormInterface {
     }
 
     $active_workspace = $this->workspaceManager->getActiveWorkspace();
-    unset($workspace_labels[$active_workspace->id()]);
+    if ($active_workspace) {
+      unset($workspace_labels[$active_workspace->id()]);
+    }
 
     $form['current'] = [
       '#type' => 'item',
       '#title' => $this->t('Current workspace'),
-      '#markup' => $active_workspace->label(),
+      '#markup' => $active_workspace ? $active_workspace->label() : $this->t('None'),
       '#wrapper_attributes' => [
         'class' => ['container-inline'],
       ],
@@ -100,12 +103,26 @@ class WorkspaceSwitcherForm extends FormBase implements WorkspaceFormInterface {
       '#wrapper_attributes' => [
         'class' => ['container-inline'],
       ],
+      '#access' => !empty($workspace_labels),
     ];
 
-    $form['submit'] = [
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Activate'),
+      '#button_type' => 'primary',
+      '#access' => !empty($workspace_labels),
     ];
+
+    if ($active_workspace) {
+      $form['actions']['switch_to_live'] = [
+        '#type' => 'submit',
+        '#submit' => ['::submitSwitchToLive'],
+        '#value' => $this->t('Switch to Live'),
+        '#limit_validation_errors' => [],
+        '#button_type' => 'primary',
+      ];
+    }
 
     return $form;
   }
@@ -126,6 +143,14 @@ class WorkspaceSwitcherForm extends FormBase implements WorkspaceFormInterface {
     catch (WorkspaceAccessException $e) {
       $this->messenger->addError($this->t('You do not have access to activate the %workspace_label workspace.', ['%workspace_label' => $workspace->label()]));
     }
+  }
+
+  /**
+   * Submit handler for switching to the live version of the site.
+   */
+  public function submitSwitchToLive(array &$form, FormStateInterface $form_state) {
+    $this->workspaceManager->switchToLive();
+    $this->messenger->addMessage($this->t('You are now viewing the live version of the site.'));
   }
 
 }

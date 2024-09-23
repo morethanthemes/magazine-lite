@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\migrate\MigrateExecutable;
@@ -12,16 +14,14 @@ use Drupal\migrate\MigrateExecutable;
 class MigrateConfigRollbackTest extends MigrateTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['system', 'language', 'config_translation'];
+  protected static $modules = ['system', 'language', 'config_translation'];
 
   /**
    * Tests rolling back configuration.
    */
-  public function testConfigRollback() {
+  public function testConfigRollback(): void {
     // Use system.site configuration to demonstrate importing and rolling back
     // configuration.
     $variable = [
@@ -78,8 +78,7 @@ class MigrateConfigRollbackTest extends MigrateTestBase {
     $this->assertSame('Some site', $config->get('name'));
     $this->assertSame('Awesome slogan', $config->get('slogan'));
     // Confirm the map row is deleted.
-    $map_row = $config_id_map->getRowBySource(['id' => $variable[0]['id']]);
-    $this->assertNull($map_row['destid1']);
+    $this->assertFalse($config_id_map->getRowBySource(['id' => $variable[0]['id']]));
 
     // We use system configuration to demonstrate importing and rolling back
     // configuration translations.

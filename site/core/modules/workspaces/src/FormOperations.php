@@ -4,10 +4,10 @@ namespace Drupal\workspaces;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceDynamicSafeFormInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\views\Form\ViewsExposedForm;
-use Drupal\workspaces\Form\WorkspaceFormInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -56,33 +56,23 @@ class FormOperations implements ContainerInjectionInterface {
    * @see hook_form_alter()
    */
   public function formAlter(array &$form, FormStateInterface $form_state, $form_id) {
-    // No alterations are needed in the default workspace.
-    if ($this->workspaceManager->getActiveWorkspace()->isDefaultWorkspace()) {
+    // No alterations are needed if we're not in a workspace context.
+    if (!$this->workspaceManager->hasActiveWorkspace()) {
       return;
     }
 
-    // Add an additional validation step for every form if we are in a
-    // non-default workspace.
+    // Add a validation step for every form if we are in a workspace.
     $this->addWorkspaceValidation($form);
 
     // If a form has already been marked as safe or not to submit in a
-    // non-default workspace, we don't have anything else to do.
+    // workspace, we don't have anything else to do.
     if ($form_state->has('workspace_safe')) {
       return;
     }
 
-    // No forms are safe to submit in a non-default workspace by default, except
-    // for the whitelisted ones defined below.
-    $workspace_safe = FALSE;
-
-    // Whitelist a few forms that we know are safe to submit.
     $form_object = $form_state->getFormObject();
-    $is_workspace_form = $form_object instanceof WorkspaceFormInterface;
-    $is_search_form = in_array($form_object->getFormId(), ['search_block_form', 'search_form'], TRUE);
-    $is_views_exposed_form = $form_object instanceof ViewsExposedForm;
-    if ($is_workspace_form || $is_search_form || $is_views_exposed_form) {
-      $workspace_safe = TRUE;
-    }
+    $workspace_safe = $form_object instanceof WorkspaceSafeFormInterface
+      || ($form_object instanceof WorkspaceDynamicSafeFormInterface && $form_object->isWorkspaceSafeForm($form, $form_state));
 
     $form_state->set('workspace_safe', $workspace_safe);
   }
@@ -102,7 +92,7 @@ class FormOperations implements ContainerInjectionInterface {
     }
 
     if (isset($element['#validate'])) {
-      $element['#validate'][] = [get_called_class(), 'validateDefaultWorkspace'];
+      $element['#validate'][] = [static::class, 'validateDefaultWorkspace'];
     }
   }
 

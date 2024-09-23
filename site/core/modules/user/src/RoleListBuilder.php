@@ -34,9 +34,11 @@ class RoleListBuilder extends DraggableListBuilder {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(EntityTypeInterface $entityType,
-                              EntityStorageInterface $storage,
-                              MessengerInterface $messenger) {
+  public function __construct(
+    EntityTypeInterface $entityType,
+    EntityStorageInterface $storage,
+    MessengerInterface $messenger,
+  ) {
     parent::__construct($entityType, $storage);
     $this->messenger = $messenger;
   }
@@ -47,7 +49,7 @@ class RoleListBuilder extends DraggableListBuilder {
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
     return new static(
       $entity_type,
-      $container->get('entity.manager')->getStorage($entity_type->id()),
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('messenger')
     );
   }
@@ -85,7 +87,7 @@ class RoleListBuilder extends DraggableListBuilder {
       $operations['permissions'] = [
         'title' => t('Edit permissions'),
         'weight' => 20,
-        'url' => $entity->urlInfo('edit-permissions-form'),
+        'url' => $entity->toUrl('edit-permissions-form'),
       ];
     }
     return $operations;

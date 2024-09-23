@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Plugin\migrate\source\d7;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
@@ -15,12 +17,12 @@ class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['taxonomy', 'migrate_drupal'];
+  protected static $modules = ['taxonomy', 'migrate_drupal'];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.
@@ -295,7 +297,6 @@ class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
         'description' => 'Term Description FR',
         'format' => 'full_html',
         'machine_name' => 'tags',
-        'is_container' => FALSE,
         'field_test' => [
           [
             'value' => 'French field',
@@ -318,7 +319,6 @@ class TermEntityTranslationTest extends MigrateSqlSourceTestBase {
         'description' => 'Term Description ES',
         'format' => 'full_html',
         'machine_name' => 'tags',
-        'is_container' => FALSE,
         'field_test' => [
           [
             'value' => 'Spanish field',

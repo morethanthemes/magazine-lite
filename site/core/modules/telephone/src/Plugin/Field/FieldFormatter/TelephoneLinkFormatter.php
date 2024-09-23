@@ -2,22 +2,23 @@
 
 namespace Drupal\telephone\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 
 /**
  * Plugin implementation of the 'telephone_link' formatter.
- *
- * @FieldFormatter(
- *   id = "telephone_link",
- *   label = @Translation("Telephone link"),
- *   field_types = {
- *     "telephone"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'telephone_link',
+  label: new TranslatableMarkup('Telephone link'),
+  field_types: [
+    'telephone',
+  ],
+)]
 class TelephoneLinkFormatter extends FormatterBase {
 
   /**
@@ -35,7 +36,7 @@ class TelephoneLinkFormatter extends FormatterBase {
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $elements['title'] = [
       '#type' => 'textfield',
-      '#title' => t('Title to replace basic numeric telephone number display'),
+      '#title' => $this->t('Title to replace basic numeric telephone number display'),
       '#default_value' => $this->getSetting('title'),
     ];
 
@@ -50,10 +51,10 @@ class TelephoneLinkFormatter extends FormatterBase {
     $settings = $this->getSettings();
 
     if (!empty($settings['title'])) {
-      $summary[] = t('Link using text: @title', ['@title' => $settings['title']]);
+      $summary[] = $this->t('Link using text: @title', ['@title' => $settings['title']]);
     }
     else {
-      $summary[] = t('Link using provided telephone number.');
+      $summary[] = $this->t('Link using provided telephone number.');
     }
 
     return $summary;

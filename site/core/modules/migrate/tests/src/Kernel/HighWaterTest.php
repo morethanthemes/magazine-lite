@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
+
+// cspell:ignore Highwater
 
 /**
  * Tests migration high water property.
@@ -12,7 +16,7 @@ class HighWaterTest extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'system',
     'user',
     'node',
@@ -24,7 +28,7 @@ class HighWaterTest extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // Create source test table.
     $this->sourceDatabase->schema()->createTable('high_water_node', [
@@ -84,7 +88,7 @@ class HighWaterTest extends MigrateTestBase {
   /**
    * Tests high water property of SqlBase.
    */
-  public function testHighWater() {
+  public function testHighWater(): void {
     // Assert all of the nodes have been imported.
     $this->assertNodeExists('Item 1');
     $this->assertNodeExists('Item 2');
@@ -123,15 +127,15 @@ class HighWaterTest extends MigrateTestBase {
     // Execute migration again.
     $this->executeMigration('high_water_test');
 
-    // Item with lower highwater should not be updated.
+    // Item with lower high water should not be updated.
     $this->assertNodeExists('Item 1');
     $this->assertNodeDoesNotExist('Item 1 updated');
 
-    // Item with equal highwater should not be updated.
+    // Item with equal high water should not be updated.
     $this->assertNodeExists('Item 2');
     $this->assertNodeDoesNotExist('Item 2 updated');
 
-    // Item with greater highwater should be updated.
+    // Item with greater high water should be updated.
     $this->assertNodeExists('Item 3 updated');
     $this->assertNodeDoesNotExist('Item 3');
   }
@@ -139,7 +143,7 @@ class HighWaterTest extends MigrateTestBase {
   /**
    * Tests that the high water value can be 0.
    */
-  public function testZeroHighwater() {
+  public function testZeroHighwater(): void {
     // Assert all of the nodes have been imported.
     $this->assertNodeExists('Item 1');
     $this->assertNodeExists('Item 2');
@@ -172,7 +176,7 @@ class HighWaterTest extends MigrateTestBase {
   /**
    * Tests that deleting the high water value causes all rows to be reimported.
    */
-  public function testNullHighwater() {
+  public function testNullHighwater(): void {
     // Assert all of the nodes have been imported.
     $this->assertNodeExists('Item 1');
     $this->assertNodeExists('Item 2');
@@ -205,7 +209,7 @@ class HighWaterTest extends MigrateTestBase {
   /**
    * Tests high water property of SqlBase when rows marked for update.
    */
-  public function testHighWaterUpdate() {
+  public function testHighWaterUpdate(): void {
     // Assert all of the nodes have been imported.
     $this->assertNodeExists('Item 1');
     $this->assertNodeExists('Item 2');
@@ -247,15 +251,15 @@ class HighWaterTest extends MigrateTestBase {
 
     $this->executeMigration('high_water_test');
 
-    // Item with lower highwater should be updated.
+    // Item with lower high water should be updated.
     $this->assertNodeExists('Item 1 updated');
     $this->assertNodeDoesNotExist('Item 1');
 
-    // Item with equal highwater should be updated.
+    // Item with equal high water should be updated.
     $this->assertNodeExists('Item 2 updated');
     $this->assertNodeDoesNotExist('Item 2');
 
-    // Item with greater highwater should be updated.
+    // Item with greater high water should be updated.
     $this->assertNodeExists('Item 3 updated');
     $this->assertNodeDoesNotExist('Item 3');
   }
@@ -265,8 +269,10 @@ class HighWaterTest extends MigrateTestBase {
    *
    * @param string $title
    *   Title of the node.
+   *
+   * @internal
    */
-  protected function assertNodeExists($title) {
+  protected function assertNodeExists(string $title): void {
     self::assertTrue($this->nodeExists($title));
   }
 
@@ -275,8 +281,10 @@ class HighWaterTest extends MigrateTestBase {
    *
    * @param string $title
    *   Title of the node.
+   *
+   * @internal
    */
-  protected function assertNodeDoesNotExist($title) {
+  protected function assertNodeDoesNotExist(string $title): void {
     self::assertFalse($this->nodeExists($title));
   }
 
@@ -289,7 +297,7 @@ class HighWaterTest extends MigrateTestBase {
    * @return bool
    */
   protected function nodeExists($title) {
-    $query = \Drupal::entityQuery('node');
+    $query = \Drupal::entityQuery('node')->accessCheck(FALSE);
     $result = $query
       ->condition('title', $title)
       ->range(0, 1)

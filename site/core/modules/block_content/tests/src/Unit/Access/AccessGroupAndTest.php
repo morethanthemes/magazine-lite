@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Unit\Access;
 
 use Drupal\block_content\Access\AccessGroupAnd;
@@ -19,7 +21,7 @@ class AccessGroupAndTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->account = $this->prophesize(AccountInterface::class)->reveal();
   }
@@ -27,7 +29,7 @@ class AccessGroupAndTest extends UnitTestCase {
   /**
    * @covers \Drupal\block_content\Access\AccessGroupAnd
    */
-  public function testGroups() {
+  public function testGroups(): void {
     $allowedAccessible = $this->createAccessibleDouble(AccessResult::allowed());
     $forbiddenAccessible = $this->createAccessibleDouble(AccessResult::forbidden());
     $neutralAccessible = $this->createAccessibleDouble(AccessResult::neutral());

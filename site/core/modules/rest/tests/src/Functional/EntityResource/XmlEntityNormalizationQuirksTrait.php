@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Functional\EntityResource;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -22,6 +24,17 @@ use Drupal\user\StatusItem;
 trait XmlEntityNormalizationQuirksTrait {
 
   use XmlNormalizationQuirksTrait;
+
+  /**
+   * Marks some tests as skipped because XML cannot be deserialized.
+   *
+   * @before
+   */
+  public function xmlEntityNormalizationQuirksTraitSkipTests(): void {
+    if (in_array($this->name(), ['testPatch', 'testPost'], TRUE)) {
+      $this->markTestSkipped('Deserialization of the XML format is not supported.');
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -70,20 +83,24 @@ trait XmlEntityNormalizationQuirksTrait {
             $value = &$normalization[$field_name][$i]['value'];
             $value = $value === TRUE ? '1' : '0';
             break;
+
           case IntegerItem::class:
           case ListIntegerItem::class:
             $value = &$normalization[$field_name][$i]['value'];
             $value = (string) $value;
             break;
+
           case PathItem::class:
             $pid = &$normalization[$field_name][$i]['pid'];
             $pid = (string) $pid;
             break;
+
           case EntityReferenceItem::class:
           case FileItem::class:
             $target_id = &$normalization[$field_name][$i]['target_id'];
             $target_id = (string) $target_id;
             break;
+
           case ChangedItem::class:
           case CreatedItem::class:
           case TimestampItem::class:
@@ -92,6 +109,7 @@ trait XmlEntityNormalizationQuirksTrait {
               $value = (string) $value;
             }
             break;
+
           case ImageItem::class:
             $height = &$normalization[$field_name][$i]['height'];
             $height = (string) $height;
@@ -139,22 +157,6 @@ trait XmlEntityNormalizationQuirksTrait {
     }
 
     return $normalization;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testPost() {
-    // Deserialization of the XML format is not supported.
-    $this->markTestSkipped();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testPatch() {
-    // Deserialization of the XML format is not supported.
-    $this->markTestSkipped();
   }
 
 }

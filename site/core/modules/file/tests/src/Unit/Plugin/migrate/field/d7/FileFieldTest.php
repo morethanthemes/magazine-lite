@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Unit\Plugin\migrate\field\d7;
 
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -7,6 +9,8 @@ use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
 use Drupal\file\Plugin\migrate\field\d7\FileField;
 use Prophecy\Argument;
+
+// cspell:ignore filefield imagefield
 
 /**
  * @coversDefaultClass \Drupal\file\Plugin\migrate\field\d7\FileField
@@ -27,7 +31,9 @@ class FileFieldTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
+    parent::setUp();
+
     $this->plugin = new FileField([], 'file', []);
 
     $migration = $this->prophesize(MigrationInterface::class);
@@ -46,12 +52,12 @@ class FileFieldTest extends UnitTestCase {
   /**
    * @covers ::defineValueProcessPipeline
    */
-  public function testDefineValueProcessPipeline($method = 'defineValueProcessPipeline') {
-    $this->plugin->$method($this->migration, 'somefieldname', []);
+  public function testDefineValueProcessPipeline($method = 'defineValueProcessPipeline'): void {
+    $this->plugin->$method($this->migration, 'field_name', []);
 
     $expected = [
       'plugin' => 'sub_process',
-      'source' => 'somefieldname',
+      'source' => 'field_name',
       'process' => [
         'target_id' => 'fid',
         'display' => 'display',
@@ -64,7 +70,7 @@ class FileFieldTest extends UnitTestCase {
   /**
    * Data provider for testGetFieldType().
    */
-  public function getFieldTypeProvider() {
+  public static function getFieldTypeProvider() {
     return [
       ['image', 'imagefield_widget'],
       ['file', 'filefield_widget'],
@@ -76,7 +82,7 @@ class FileFieldTest extends UnitTestCase {
    * @covers ::getFieldType
    * @dataProvider getFieldTypeProvider
    */
-  public function testGetFieldType($expected_type, $widget_type, array $settings = []) {
+  public function testGetFieldType($expected_type, $widget_type, array $settings = []): void {
     $row = new Row();
     $row->setSourceProperty('widget_type', $widget_type);
     $row->setSourceProperty('global_settings', $settings);

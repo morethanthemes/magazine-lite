@@ -55,10 +55,14 @@ class MenuLinkEditForm extends FormBase {
   /**
    * {@inheritdoc}
    *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
    * @param \Drupal\Core\Menu\MenuLinkInterface $menu_link_plugin
    *   The plugin instance to use for this form.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, MenuLinkInterface $menu_link_plugin = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?MenuLinkInterface $menu_link_plugin = NULL) {
     $form['menu_link_id'] = [
       '#type' => 'value',
       '#value' => $menu_link_plugin->getPluginId(),

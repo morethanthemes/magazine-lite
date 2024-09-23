@@ -4,6 +4,7 @@ namespace Drupal\Core\Render\Element;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -16,26 +17,25 @@ use Drupal\Core\Render\Element;
  *
  * Usage example:
  * @code
- * $form['homepage'] = array(
+ * $form['homepage'] = [
  *   '#type' => 'url',
  *   '#title' => $this->t('Home Page'),
  *   '#size' => 30,
  *   '#pattern' => '*.example.com',
  *   ...
- * );
+ * ];
  * @endcode
  *
  * @see \Drupal\Core\Render\Element\Textfield
- *
- * @FormElement("url")
  */
-class Url extends FormElement {
+#[FormElement('url')]
+class Url extends FormElementBase {
 
   /**
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#size' => 60,

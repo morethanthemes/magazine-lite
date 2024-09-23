@@ -11,11 +11,19 @@ use Drupal\Core\State\StateInterface;
  * Provides available extensions.
  *
  * The extension list is per extension type, like module, theme and profile.
+ *
+ * @internal
+ *   This class is not yet stable and therefore there are no guarantees that the
+ *   internal implementations including constructor signature and protected
+ *   properties / methods will not change over time. This will be reviewed after
+ *   https://www.drupal.org/project/drupal/issues/2940481
  */
 abstract class ExtensionList {
 
   /**
-   * The type of the extension: "module", "theme" or "profile".
+   * The type of the extension.
+   *
+   * Possible values: "module", "theme", "profile" or "database_driver".
    *
    * @var string
    */
@@ -104,7 +112,7 @@ abstract class ExtensionList {
   /**
    * The install profile used by the site.
    *
-   * @var string
+   * @var string|false|null
    */
   protected $installProfile;
 
@@ -151,6 +159,8 @@ abstract class ExtensionList {
    * We don't reset statically added filenames, as it is a static cache which
    * logically can't change. This is done for performance reasons of the
    * installer.
+   *
+   * @return $this
    */
   public function reset() {
     $this->extensions = NULL;
@@ -160,14 +170,13 @@ abstract class ExtensionList {
     $this->pathNames = NULL;
 
     try {
-      $this->state->delete($this->getPathnamesCacheId());
+      $this->state->delete($this->getPathNamesCacheId());
     }
     catch (DatabaseExceptionWrapper $e) {
       // Ignore exceptions caused by a non existing {key_value} table in the
       // early installer.
     }
 
-    $this->cache->delete($this->getPathnamesCacheId());
     // @todo In the long run it would be great to add the reset, but the early
     //   installer fails due to that. https://www.drupal.org/node/2719315 could
     //   help to resolve with that.
@@ -200,7 +209,7 @@ abstract class ExtensionList {
    * @return string
    *   The filename cache ID.
    */
-  protected function getPathnamesCacheId() {
+  protected function getPathNamesCacheId() {
     return "system.{$this->type}.files";
   }
 
@@ -304,16 +313,8 @@ abstract class ExtensionList {
     $extensions = $this->doScanExtensions();
 
     // Read info files for each extension.
-    foreach ($extensions as $extension_name => $extension) {
-      // Look for the info file.
-      $extension->info = $this->infoParser->parse($extension->getPathname());
-
-      // Add the info file modification time, so it becomes available for
-      // contributed extensions to use for ordering extension lists.
-      $extension->info['mtime'] = $extension->getMTime();
-
-      // Merge extension type-specific defaults.
-      $extension->info += $this->defaults;
+    foreach ($extensions as $extension) {
+      $extension->info = $this->createExtensionInfo($extension);
 
       // Invoke hook_system_info_alter() to give installed modules a chance to
       // modify the data in the .info.yml files if necessary.
@@ -411,21 +412,17 @@ abstract class ExtensionList {
    *
    * @return string[]
    */
-  public function getPathnames() {
+  public function getPathNames() {
     if ($this->pathNames === NULL) {
-      $cache_id = $this->getPathnamesCacheId();
-      if ($cache = $this->cache->get($cache_id)) {
-        $path_names = $cache->data;
-      }
-      // We use $file_names below.
-      elseif (!$path_names = $this->state->get($cache_id)) {
-        $path_names = $this->recalculatePathnames();
+      $cache_id = $this->getPathNamesCacheId();
+      $this->pathNames = $this->state->get($cache_id);
+
+      if ($this->pathNames === NULL) {
+        $this->pathNames = $this->recalculatePathNames();
         // Store filenames to allow static::getPathname() to retrieve them
         // without having to rebuild or scan the filesystem.
-        $this->state->set($cache_id, $path_names);
-        $this->cache->set($cache_id, $path_names);
+        $this->state->set($cache_id, $this->pathNames);
       }
-      $this->pathNames = $path_names;
     }
     return $this->pathNames;
   }
@@ -436,7 +433,7 @@ abstract class ExtensionList {
    * @return string[]
    *   An array of .info.yml file locations keyed by the extension machine name.
    */
-  protected function recalculatePathnames() {
+  protected function recalculatePathNames() {
     $extensions = $this->getList();
     ksort($extensions);
 
@@ -516,7 +513,7 @@ abstract class ExtensionList {
     elseif (isset($this->pathNames[$extension_name])) {
       return $this->pathNames[$extension_name];
     }
-    elseif (($path_names = $this->getPathnames()) && isset($path_names[$extension_name])) {
+    elseif (($path_names = $this->getPathNames()) && isset($path_names[$extension_name])) {
       return $path_names[$extension_name];
     }
     throw new UnknownExtensionException("The {$this->type} $extension_name does not exist.");
@@ -539,6 +536,66 @@ abstract class ExtensionList {
    */
   public function getPath($extension_name) {
     return dirname($this->getPathname($extension_name));
+  }
+
+  /**
+   * Creates the info value for an extension object.
+   *
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   The extension whose info is to be altered.
+   *
+   * @return array
+   *   The extension info array.
+   */
+  protected function createExtensionInfo(Extension $extension) {
+    $info = $this->infoParser->parse($extension->getPathname());
+
+    // Add the info file modification time, so it becomes available for
+    // contributed extensions to use for ordering extension lists.
+    $info['mtime'] = $extension->getFileInfo()->getMTime();
+
+    // Merge extension type-specific defaults, making sure to replace NULL
+    // values.
+    foreach ($this->defaults as $key => $default_value) {
+      if (!isset($info[$key])) {
+        $info[$key] = $default_value;
+      }
+    }
+
+    return $info;
+  }
+
+  /**
+   * Tests the compatibility of an extension.
+   *
+   * @param string $name
+   *   The extension name to check.
+   *
+   * @return bool
+   *   TRUE if the extension is incompatible and FALSE if not.
+   *
+   * @throws \Drupal\Core\Extension\Exception\UnknownExtensionException
+   *   If there is no extension with the supplied name.
+   */
+  public function checkIncompatibility($name) {
+    $extension = $this->get($name);
+    return $extension->info['core_incompatible'] || (isset($extension->info['php']) && version_compare(phpversion(), $extension->info['php']) < 0);
+  }
+
+  /**
+   * Array sorting callback; sorts extensions by their name.
+   *
+   * @param \Drupal\Core\Extension\Extension $a
+   *   The first extension to compare.
+   * @param \Drupal\Core\Extension\Extension $b
+   *   The second extension to compare.
+   *
+   * @return int
+   *   Less than 0 if $a is less than $b, more than 0 if $a is greater than $b,
+   *   and 0 if they are equal.
+   */
+  public static function sortByName(Extension $a, Extension $b): int {
+    return strcasecmp($a->info['name'], $b->info['name']);
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Core\Session;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -15,12 +17,17 @@ class SessionTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['menu_link_content', 'block'];
+  protected static $modules = ['menu_link_content', 'block'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     $account = $this->drupalCreateUser();
@@ -43,7 +50,7 @@ class SessionTest extends WebDriverTestBase {
    * performed by the Mink browser. The SIMPLETEST_USER_AGENT cookie must always
    * be valid.
    */
-  public function testSessionExpiration() {
+  public function testSessionExpiration(): void {
     // Visit the front page and click the link back to the front page a large
     // number of times.
     $this->drupalGet('<front>');

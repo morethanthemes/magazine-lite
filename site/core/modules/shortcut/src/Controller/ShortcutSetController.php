@@ -5,7 +5,6 @@ namespace Drupal\shortcut\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\shortcut\ShortcutSetInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -32,13 +31,6 @@ class ShortcutSetController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('path.validator'));
-  }
-
-  /**
    * Creates a new link in the provided shortcut set.
    *
    * @param \Drupal\shortcut\ShortcutSetInterface $shortcut_set
@@ -55,7 +47,7 @@ class ShortcutSetController extends ControllerBase {
     $link = $request->query->get('link');
     $name = $request->query->get('name');
     if (parse_url($link, PHP_URL_SCHEME) === NULL && $this->pathValidator->isValid($link)) {
-      $shortcut = $this->entityManager()->getStorage('shortcut')->create([
+      $shortcut = $this->entityTypeManager()->getStorage('shortcut')->create([
         'title' => $name,
         'shortcut_set' => $shortcut_set->id(),
         'link' => [

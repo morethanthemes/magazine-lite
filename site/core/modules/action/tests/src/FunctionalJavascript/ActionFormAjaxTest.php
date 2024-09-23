@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\action\FunctionalJavascript;
 
 use Drupal\Core\Url;
@@ -7,9 +9,10 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\system\Entity\Action;
 
 /**
- * Tests action plugins using Javascript.
+ * Tests action plugins using JavaScript.
  *
  * @group action
+ * @group legacy
  */
 class ActionFormAjaxTest extends WebDriverTestBase {
 
@@ -21,7 +24,12 @@ class ActionFormAjaxTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
     $user = $this->drupalCreateUser(['administer actions']);
     $this->drupalLogin($user);
@@ -30,7 +38,7 @@ class ActionFormAjaxTest extends WebDriverTestBase {
   /**
    * Tests action plugins with AJAX save their configuration.
    */
-  public function testActionConfigurationWithAjax() {
+  public function testActionConfigurationWithAjax(): void {
     $url = Url::fromRoute('action.admin_add', ['action_id' => 'action_form_ajax_test']);
     $this->drupalGet($url);
     $page = $this->getSession()->getPage();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Menu;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -15,12 +17,12 @@ class LocalActionManagerTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['menu_test', 'user', 'system'];
+  protected static $modules = ['menu_test', 'user', 'system'];
 
   /**
    * Tests the cacheability of local actions.
    */
-  public function testCacheability() {
+  public function testCacheability(): void {
     /** @var \Drupal\Core\Menu\LocalActionManager $local_action_manager */
     $local_action_manager = \Drupal::service('plugin.manager.menu.local_action');
     $build = [

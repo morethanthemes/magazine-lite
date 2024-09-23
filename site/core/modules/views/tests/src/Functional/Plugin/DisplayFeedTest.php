@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal\Core\Url;
+use Drupal\Tests\Traits\Core\PathAliasTestTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
 
@@ -13,6 +17,8 @@ use Drupal\views\Views;
  */
 class DisplayFeedTest extends ViewTestBase {
 
+  use PathAliasTestTrait;
+
   /**
    * Views used by this test.
    *
@@ -21,14 +27,20 @@ class DisplayFeedTest extends ViewTestBase {
   public static $testViews = ['test_display_feed', 'test_attached_disabled', 'test_feed_icon'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['block', 'node', 'views'];
+  protected static $modules = ['block', 'node', 'views', 'views_test_rss'];
 
-  protected function setUp($import_test_views = TRUE) {
-    parent::setUp($import_test_views);
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'starterkit_theme';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp($import_test_views = TRUE, $modules = ['views_test_config']): void {
+    parent::setUp($import_test_views, $modules);
 
     $this->enableViewsTestModule();
 
@@ -39,7 +51,70 @@ class DisplayFeedTest extends ViewTestBase {
   /**
    * Tests the rendered output.
    */
-  public function testFeedOutput() {
+  public function testFeedOutput(): void {
+    $this->drupalCreateContentType(['type' => 'page']);
+
+    // Verify a title with HTML entities is properly escaped.
+    $node_title = 'This "cool" & "neat" article\'s title';
+    $node = $this->drupalCreateNode([
+      'title' => $node_title,
+      'body' => [
+        0 => [
+          'value' => 'A paragraph',
+          'format' => filter_default_format(),
+        ],
+      ],
+    ]);
+    $node_link = $node->toUrl()->setAbsolute()->toString();
+
+    // Test the site name setting.
+    $site_name = $this->randomMachineName();
+    $frontpage_url = Url::fromRoute('<front>')->setAbsolute()->toString();
+    $this->config('system.site')->set('name', $site_name)->save();
+
+    $this->drupalGet('test-feed-display.xml');
+    $this->assertEquals($site_name, $this->getSession()->getDriver()->getText('//channel/title'));
+    $this->assertEquals($frontpage_url, $this->getSession()->getDriver()->getText('//channel/link'));
+    $this->assertEquals('Copyright 2019 Dries Buytaert', $this->getSession()->getDriver()->getText('//channel/copyright'));
+    $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//item/title'));
+    $this->assertEquals($node_link, $this->getSession()->getDriver()->getText('//item/link'));
+    // Verify HTML is properly escaped in the description field.
+    $this->assertSession()->responseContains('&lt;p&gt;A paragraph&lt;/p&gt;');
+
+    $view = $this->container->get('entity_type.manager')->getStorage('view')->load('test_display_feed');
+    $display = &$view->getDisplay('feed_1');
+    $display['display_options']['sitename_title'] = 0;
+    $view->save();
+
+    $this->drupalGet('test-feed-display.xml');
+    $this->assertEquals('test_display_feed', $this->getSession()->getDriver()->getText('//channel/title'));
+
+    // Add a block display and attach the feed.
+    $view->getExecutable()->newDisplay('block', NULL, 'test');
+    $display = &$view->getDisplay('feed_1');
+    $display['display_options']['displays']['test'] = 'test';
+    $view->save();
+    // Test the feed display adds a feed icon to the block display.
+    $this->drupalPlaceBlock('views_block:test_display_feed-test');
+    $this->drupalGet('<front>');
+    $feed_icon = $this->cssSelect('div.view-id-test_display_feed a.feed-icon');
+    $this->assertStringContainsString('test-feed-display.xml', $feed_icon[0]->getAttribute('href'), 'The feed icon was found.');
+
+    // Test feed display attached to page display with arguments.
+    $this->drupalGet('test-feed-icon/' . $node->id());
+    $page_url = $this->getUrl();
+    $icon_href = $this->cssSelect('a.feed-icon[href *= "test-feed-icon"]')[0]->getAttribute('href');
+    $this->assertEquals($page_url . '/feed', $icon_href, 'The feed icon was found.');
+    $link_href = $this->cssSelect('link[type = "application/rss+xml"][href *= "test-feed-icon"]')[0]->getAttribute('href');
+    $this->assertEquals($page_url . '/feed', $link_href, 'The RSS link was found.');
+    $this->drupalGet($icon_href);
+    $this->assertEquals($frontpage_url, $this->getSession()->getDriver()->getText('//channel/link'));
+  }
+
+  /**
+   * Tests the rendered output for fields display.
+   */
+  public function testFeedFieldOutput(): void {
     $this->drupalCreateContentType(['type' => 'page']);
 
     // Verify a title with HTML entities is properly escaped.
@@ -54,74 +129,34 @@ class DisplayFeedTest extends ViewTestBase {
       ],
     ]);
 
-    // Test the site name setting.
-    $site_name = $this->randomMachineName();
-    $this->config('system.site')->set('name', $site_name)->save();
+    // Create an alias to verify that outbound processing runs on the link and
+    // ensure that the node actually contains that.
+    $this->createPathAlias('/node/' . $node->id(), '/the-article-alias');
 
-    $this->drupalGet('test-feed-display.xml');
-    $this->assertEquals($site_name, $this->getSession()->getDriver()->getText('//title'));
-    $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//item/title'));
-    // Verify HTML is properly escaped in the description field.
-    $this->assertRaw('&lt;p&gt;A paragraph&lt;/p&gt;');
-
-    $view = $this->container->get('entity.manager')->getStorage('view')->load('test_display_feed');
-    $display = &$view->getDisplay('feed_1');
-    $display['display_options']['sitename_title'] = 0;
-    $view->save();
-
-    $this->drupalGet('test-feed-display.xml');
-    $this->assertEquals('test_display_feed', $this->getSession()->getDriver()->getText('//title'));
-
-    // Add a block display and attach the feed.
-    $view->getExecutable()->newDisplay('block', NULL, 'test');
-    $display = &$view->getDisplay('feed_1');
-    $display['display_options']['displays']['test'] = 'test';
-    $view->save();
-    // Test the feed display adds a feed icon to the block display.
-    $this->drupalPlaceBlock('views_block:test_display_feed-test');
-    $this->drupalGet('<front>');
-    $feed_icon = $this->cssSelect('div.view-id-test_display_feed a.feed-icon');
-    $this->assertTrue(strpos($feed_icon[0]->getAttribute('href'), 'test-feed-display.xml'), 'The feed icon was found.');
-
-    // Test feed display attached to page display with arguments.
-    $this->drupalGet('test-feed-icon/' . $node->id());
-    $page_url = $this->getUrl();
-    $icon_href = $this->cssSelect('a.feed-icon[href *= "test-feed-icon"]')[0]->getAttribute('href');
-    $this->assertEqual($icon_href, $page_url . '/feed', 'The feed icon was found.');
-    $link_href = $this->cssSelect('link[type = "application/rss+xml"][href *= "test-feed-icon"]')[0]->getAttribute('href');
-    $this->assertEqual($link_href, $page_url . '/feed', 'The RSS link was found.');
-    $feed_link = simplexml_load_string($this->drupalGet($icon_href))->channel->link;
-    $this->assertEqual($feed_link, $page_url, 'The channel link was found.');
-  }
-
-  /**
-   * Tests the rendered output for fields display.
-   */
-  public function testFeedFieldOutput() {
-    $this->drupalCreateContentType(['type' => 'page']);
-
-    // Verify a title with HTML entities is properly escaped.
-    $node_title = 'This "cool" & "neat" article\'s title';
-    $this->drupalCreateNode([
-      'title' => $node_title,
-      'body' => [
-        0 => [
-          'value' => 'A paragraph',
-          'format' => filter_default_format(),
-        ],
-      ],
-    ]);
+    $node_link = $node->toUrl()->setAbsolute()->toString();
+    $this->assertStringContainsString('/the-article-alias', $node_link);
 
     $this->drupalGet('test-feed-display-fields.xml');
-    $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//title/a'));
+    $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//item/title'));
+    $this->assertEquals($node_link, $this->getSession()->getDriver()->getText('//item/link'));
     // Verify HTML is properly escaped in the description field.
-    $this->assertRaw('&lt;p&gt;A paragraph&lt;/p&gt;');
+    $this->assertSession()->responseContains('&lt;p&gt;A paragraph&lt;/p&gt;');
+
+    // Change the display to use the nid field, which is rewriting output as
+    // 'node/{{ nid }}' and make sure things are still working.
+    $view = Views::getView('test_display_feed');
+    $display = &$view->storage->getDisplay('feed_2');
+    $display['display_options']['row']['options']['link_field'] = 'nid';
+    $view->save();
+    $this->drupalGet('test-feed-display-fields.xml');
+    $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//item/title'));
+    $this->assertEquals($node_link, $this->getSession()->getDriver()->getText('//item/link'));
   }
 
   /**
    * Tests that nothing is output when the feed display is disabled.
    */
-  public function testDisabledFeed() {
+  public function testDisabledFeed(): void {
     $this->drupalCreateContentType(['type' => 'page']);
     $this->drupalCreateNode();
 
@@ -129,13 +164,12 @@ class DisplayFeedTest extends ViewTestBase {
     $view = Views::getView('test_attached_disabled');
     $view->setDisplay('page_1');
     $attached_displays = $view->display_handler->getAttachedDisplays();
-    $this->assertTrue(in_array('feed_1', $attached_displays), 'The feed display is attached to the page display.');
+    $this->assertContains('feed_1', $attached_displays, 'The feed display is attached to the page display.');
 
     // Check that the rss header is output on the page display.
     $this->drupalGet('/test-attached-disabled');
-    $feed_header = $this->xpath('//link[@rel="alternate"]');
-    $this->assertEqual($feed_header[0]->getAttribute('type'), 'application/rss+xml', 'The feed link has the type application/rss+xml.');
-    $this->assertTrue(strpos($feed_header[0]->getAttribute('href'), 'test-attached-disabled.xml'), 'Page display contains the correct feed URL.');
+    $this->assertSession()->elementAttributeContains('xpath', '//link[@rel="alternate"]', 'type', 'application/rss+xml');
+    $this->assertSession()->elementAttributeContains('xpath', '//link[@rel="alternate"]', 'href', 'test-attached-disabled.xml');
 
     // Disable the feed display.
     $view->displayHandlers->get('feed_1')->setOption('enabled', FALSE);
@@ -143,18 +177,17 @@ class DisplayFeedTest extends ViewTestBase {
 
     // Ensure there is no link rel present on the page.
     $this->drupalGet('/test-attached-disabled');
-    $result = $this->xpath('//link[@rel="alternate"]');
-    $this->assertTrue(empty($result), 'Page display does not contain a feed header.');
+    $this->assertSession()->elementNotExists('xpath', '//link[@rel="alternate"]');
 
     // Ensure the feed attachment returns 'Not found'.
     $this->drupalGet('/test-attached-disabled.xml');
-    $this->assertResponse(404);
+    $this->assertSession()->statusCodeEquals(404);
   }
 
   /**
    * Tests that the feed display works when the linked display is disabled.
    */
-  public function testDisabledLinkedDisplay() {
+  public function testDisabledLinkedDisplay(): void {
     $view = Views::getView('test_attached_disabled');
     $view->setDisplay();
     // Disable the page and link the feed to the page.
@@ -165,10 +198,44 @@ class DisplayFeedTest extends ViewTestBase {
     \Drupal::service('router.builder')->rebuild();
 
     $this->drupalGet('test-attached-disabled');
-    $this->assertResponse(404);
+    $this->assertSession()->statusCodeEquals(404);
     // Ensure the feed can still be reached.
     $this->drupalGet('test-attached-disabled.xml');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
+  }
+
+  /**
+   * Tests the cacheability of the feed display.
+   */
+  public function testFeedCacheability(): void {
+    // Test as an anonymous user.
+    $this->drupalLogout();
+
+    // Set the page cache max age to a value greater than zero.
+    $config = $this->config('system.performance');
+    $config->set('cache.page.max_age', 300);
+    $config->save();
+
+    // Uninstall all page cache modules that could cache the HTTP response
+    // headers.
+    \Drupal::service('module_installer')->uninstall([
+      'page_cache',
+      'dynamic_page_cache',
+    ]);
+
+    // Reset all so that the config and module changes are active.
+    $this->resetAll();
+
+    $url = 'test-feed-display.xml';
+    $this->drupalGet($url);
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->responseHeaderEquals('Cache-Control', 'max-age=300, public');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'application/rss+xml; charset=utf-8');
+
+    // Visit the page again to get the cached response.
+    $this->drupalGet($url);
+    $this->assertSession()->responseHeaderEquals('Cache-Control', 'max-age=300, public');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'application/rss+xml; charset=utf-8');
   }
 
 }

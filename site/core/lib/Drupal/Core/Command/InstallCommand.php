@@ -48,11 +48,12 @@ class InstallCommand extends Command {
   protected function configure() {
     $this->setName('install')
       ->setDescription('Installs a Drupal demo site. This is not meant for production and might be too simple for custom development. It is a quick and easy way to get Drupal running.')
-      ->addArgument('install-profile', InputArgument::OPTIONAL, 'Install profile to install the site in.')
+      ->addArgument('install-profile-or-recipe', InputArgument::OPTIONAL, 'Install profile or recipe directory from which to install the site.')
       ->addOption('langcode', NULL, InputOption::VALUE_OPTIONAL, 'The language to install the site in.', 'en')
       ->addOption('site-name', NULL, InputOption::VALUE_OPTIONAL, 'Set the site name.', 'Drupal')
       ->addUsage('demo_umami --langcode fr')
-      ->addUsage('standard --site-name QuickInstall');
+      ->addUsage('standard --site-name QuickInstall')
+      ->addUsage('core/recipes/standard --site-name RecipeBuiltSite');
 
     parent::configure();
   }
@@ -60,7 +61,7 @@ class InstallCommand extends Command {
   /**
    * {@inheritdoc}
    */
-  protected function execute(InputInterface $input, OutputInterface $output) {
+  protected function execute(InputInterface $input, OutputInterface $output): int {
     $io = new SymfonyStyle($input, $output);
     if (!extension_loaded('pdo_sqlite')) {
       $io->getErrorStyle()->error('You must have the pdo_sqlite PHP extension installed. See core/INSTALL.sqlite.txt for instructions.');
@@ -68,7 +69,7 @@ class InstallCommand extends Command {
     }
 
     // Change the directory to the Drupal root.
-    chdir(dirname(dirname(dirname(dirname(dirname(__DIR__))))));
+    chdir(dirname(__DIR__, 5));
 
     // Check whether there is already an installation.
     if ($this->isDrupalInstalled()) {
@@ -78,15 +79,43 @@ class InstallCommand extends Command {
       return 0;
     }
 
-    $install_profile = $input->getArgument('install-profile');
-    if ($install_profile && !$this->validateProfile($install_profile, $io)) {
-      return 1;
-    }
-    if (!$install_profile) {
+    $install_profile_or_recipe = $input->getArgument('install-profile-or-recipe');
+
+    if (!$install_profile_or_recipe) {
+      // User did not provide a recipe or install profile.
       $install_profile = $this->selectProfile($io);
     }
+    // Determine if an install profile or a recipe has been provided.
+    elseif ($this->validateProfile($install_profile_or_recipe)) {
+      // User provided an install profile.
+      $install_profile = $install_profile_or_recipe;
+    }
+    elseif ($this->validateRecipe($install_profile_or_recipe)) {
+      // User provided a recipe.
+      $recipe = $install_profile_or_recipe;
+    }
+    else {
+      $error_msg = sprintf("'%s' is not a valid install profile or recipe.", $install_profile_or_recipe);
 
-    return $this->install($this->classLoader, $io, $install_profile, $input->getOption('langcode'), $this->getSitePath(), $input->getOption('site-name'));
+      // If it does not look like a path make suggestions based upon available
+      // profiles.
+      if (!str_contains('/', $install_profile_or_recipe)) {
+        $alternatives = [];
+        foreach (array_keys($this->getProfiles(TRUE, FALSE)) as $profile_name) {
+          $lev = levenshtein($install_profile_or_recipe, $profile_name);
+          if ($lev <= strlen($profile_name) / 4 || str_contains($profile_name, $install_profile_or_recipe)) {
+            $alternatives[] = $profile_name;
+          }
+        }
+        if (!empty($alternatives)) {
+          $error_msg .= sprintf(" Did you mean '%s'?", implode("' or '", $alternatives));
+        }
+      }
+      $io->getErrorStyle()->error($error_msg);
+      return 1;
+    }
+
+    return $this->install($this->classLoader, $io, $install_profile ?? '', $input->getOption('langcode'), $this->getSitePath(), $input->getOption('site-name'), $recipe ?? '');
   }
 
   /**
@@ -123,11 +152,16 @@ class InstallCommand extends Command {
    *   The path to install the site to, like 'sites/default'.
    * @param string $site_name
    *   The site name.
+   * @param string $recipe
+   *   The recipe to use for installing.
    *
    * @throws \Exception
    *   Thrown when failing to create the $site_path directory or settings.php.
+   *
+   * @return int
+   *   The command exit status.
    */
-  protected function install($class_loader, SymfonyStyle $io, $profile, $langcode, $site_path, $site_name) {
+  protected function install($class_loader, SymfonyStyle $io, $profile, $langcode, $site_path, $site_name, string $recipe) {
     $password = Crypt::randomBytesBase64(12);
     $parameters = [
       'interactive' => FALSE,
@@ -155,12 +189,16 @@ class InstallCommand extends Command {
             ],
           ],
           'enable_update_status_module' => TRUE,
-          // form_type_checkboxes_value() requires NULL instead of FALSE values
-          // for programmatic form submissions to disable a checkbox.
+          // \Drupal\Core\Render\Element\Checkboxes::valueCallback() requires
+          // NULL instead of FALSE values for programmatic form submissions to
+          // disable a checkbox.
           'enable_update_status_emails' => NULL,
         ],
       ],
     ];
+    if ($recipe) {
+      $parameters['parameters']['recipe'] = $recipe;
+    }
 
     // Create the directory and settings.php if not there so that the installer
     // works.
@@ -211,6 +249,8 @@ class InstallCommand extends Command {
     $progress_bar->finish();
     $io->writeln('<info>Username:</info> admin');
     $io->writeln("<info>Password:</info> $password");
+
+    return 0;
   }
 
   /**
@@ -270,29 +310,29 @@ class InstallCommand extends Command {
    *
    * @param string $install_profile
    *   Install profile to validate.
-   * @param \Symfony\Component\Console\Style\SymfonyStyle $io
-   *   Symfony style output decorator.
    *
    * @return bool
    *   TRUE if the profile is valid, FALSE if not.
    */
-  protected function validateProfile($install_profile, SymfonyStyle $io) {
+  protected function validateProfile($install_profile): bool {
     // Allow people to install hidden and non-distribution profiles if they
     // supply the argument.
-    $profiles = $this->getProfiles(TRUE, FALSE);
-    if (!isset($profiles[$install_profile])) {
-      $error_msg = sprintf("'%s' is not a valid install profile.", $install_profile);
-      $alternatives = [];
-      foreach (array_keys($profiles) as $profile_name) {
-        $lev = levenshtein($install_profile, $profile_name);
-        if ($lev <= strlen($profile_name) / 4 || FALSE !== strpos($profile_name, $install_profile)) {
-          $alternatives[] = $profile_name;
-        }
-      }
-      if (!empty($alternatives)) {
-        $error_msg .= sprintf(" Did you mean '%s'?", implode("' or '", $alternatives));
-      }
-      $io->getErrorStyle()->error($error_msg);
+    return array_key_exists($install_profile, $this->getProfiles(TRUE, FALSE));
+  }
+
+  /**
+   * Validates a user provided recipe.
+   *
+   * @param string $recipe
+   *   The path to the recipe to validate.
+   *
+   * @return bool
+   *   TRUE if the recipe exists, FALSE if not.
+   */
+  protected function validateRecipe(string $recipe): bool {
+    // It is impossible to validate a recipe fully at this point because that
+    // requires a container.
+    if (!is_dir($recipe) || !is_file($recipe . '/recipe.yml')) {
       return FALSE;
     }
     return TRUE;
@@ -314,7 +354,7 @@ class InstallCommand extends Command {
     $listing = new ExtensionDiscovery(getcwd(), FALSE);
     $listing->setProfileDirectories([]);
     $profiles = [];
-    $info_parser = new InfoParserDynamic();
+    $info_parser = new InfoParserDynamic(getcwd());
     foreach ($listing->scan('profile') as $profile) {
       $details = $info_parser->parse($profile->getPathname());
       // Don't show hidden profiles.
@@ -323,8 +363,8 @@ class InstallCommand extends Command {
       }
       // Determine the name of the profile; default to the internal name if none
       // is specified.
-      $name = isset($details['name']) ? $details['name'] : $profile->getName();
-      $description = isset($details['description']) ? $details['description'] : $name;
+      $name = $details['name'] ?? $profile->getName();
+      $description = $details['description'] ?? $name;
       $profiles[$profile->getName()] = $description;
 
       if ($auto_select_distributions && !empty($details['distribution'])) {

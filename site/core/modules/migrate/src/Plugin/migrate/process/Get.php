@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
@@ -86,11 +87,11 @@ use Drupal\migrate\Row;
  * This should occur extremely rarely.
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "get"
- * )
  */
+#[MigrateProcess(
+  id: "get",
+  handle_multiples: TRUE,
+)]
 class Get extends ProcessPluginBase {
 
   /**
@@ -109,23 +110,7 @@ class Get extends ProcessPluginBase {
     $return = [];
     foreach ($properties as $property) {
       if ($property || (string) $property === '0') {
-        $is_source = TRUE;
-        if ($property[0] == '@') {
-          $property = preg_replace_callback('/^(@?)((?:@@)*)([^@]|$)/', function ($matches) use (&$is_source) {
-            // If there are an odd number of @ in the beginning, it's a
-            // destination.
-            $is_source = empty($matches[1]);
-            // Remove the possible escaping and do not lose the terminating
-            // non-@ either.
-            return str_replace('@@', '@', $matches[2]) . $matches[3];
-          }, $property);
-        }
-        if ($is_source) {
-          $return[] = $row->getSourceProperty($property);
-        }
-        else {
-          $return[] = $row->getDestinationProperty($property);
-        }
+        $return[] = $row->get($property);
       }
       else {
         $return[] = $value;

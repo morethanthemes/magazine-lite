@@ -6,7 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormState;
 
 /**
- * Controller for block_test module
+ * Controller for block_test module.
  */
 class TestMultipleFormController extends ControllerBase {
 
@@ -22,7 +22,7 @@ class TestMultipleFormController extends ControllerBase {
     // see if there's only one in the tests.
     $post_render_callable = function ($elements) {
       $matches = [];
-      preg_match_all('<form\s(.*?)action="(.*?)"(.*)>', $elements, $matches);
+      preg_match_all('<form\s(.*?)action="(.*?)"(.*)>', (string) $elements, $matches);
 
       $action_values = $matches[2];
 

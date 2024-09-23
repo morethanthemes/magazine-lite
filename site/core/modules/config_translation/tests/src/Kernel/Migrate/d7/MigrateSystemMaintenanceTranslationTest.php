@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
@@ -11,25 +13,27 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
  */
 class MigrateSystemMaintenanceTranslationTest extends MigrateDrupal7TestBase {
 
-  public static $modules = [
+  protected static $modules = [
     'language',
     'config_translation',
-    // Required for translation migrations.
-    'migrate_drupal_multilingual',
   ];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
-    $this->executeMigration('d7_system_maintenance_translation');
+    $this->executeMigrations([
+      'language',
+      'system_maintenance',
+      'd7_system_maintenance_translation',
+    ]);
   }
 
   /**
    * Tests migrations of i18n maintenance variable.
    */
-  public function testSystemMaintenance() {
+  public function testSystemMaintenance(): void {
     $config = \Drupal::service('language_manager')->getLanguageConfigOverride('is', 'system.maintenance');
     $this->assertSame('is - This is a custom maintenance mode message.', $config->get('message'));
   }

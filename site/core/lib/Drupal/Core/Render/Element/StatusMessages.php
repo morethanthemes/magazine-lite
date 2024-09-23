@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal\Core\Render\Attribute\RenderElement;
+
 /**
  * Provides a messages element.
  *
@@ -13,10 +15,9 @@ namespace Drupal\Core\Render\Element;
  *   '#type' => 'status_messages',
  * ];
  * @endcode
- *
- * @RenderElement("status_messages")
  */
-class StatusMessages extends RenderElement {
+#[RenderElement('status_messages')]
+class StatusMessages extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -30,8 +31,9 @@ class StatusMessages extends RenderElement {
       // of that specific type.
       '#display' => NULL,
       '#pre_render' => [
-        get_class() . '::generatePlaceholder',
+        static::class . '::generatePlaceholder',
       ],
+      '#include_fallback' => FALSE,
     ];
   }
 
@@ -45,15 +47,25 @@ class StatusMessages extends RenderElement {
    *   The updated renderable array containing the placeholder.
    */
   public static function generatePlaceholder(array $element) {
-    $element = [
-      '#lazy_builder' => [get_class() . '::renderMessages', [$element['#display']]],
+    $build = [
+      '#lazy_builder' => [static::class . '::renderMessages', [$element['#display']]],
       '#create_placeholder' => TRUE,
     ];
 
     // Directly create a placeholder as we need this to be placeholdered
     // regardless if this is a POST or GET request.
     // @todo remove this when https://www.drupal.org/node/2367555 lands.
-    return \Drupal::service('render_placeholder_generator')->createPlaceholder($element);
+    $build = \Drupal::service('render_placeholder_generator')->createPlaceholder($build);
+
+    if ($element['#include_fallback']) {
+      return [
+        'fallback' => [
+          '#markup' => '<div data-drupal-messages-fallback class="hidden"></div>',
+        ],
+        'messages' => $build,
+      ];
+    }
+    return $build;
   }
 
   /**

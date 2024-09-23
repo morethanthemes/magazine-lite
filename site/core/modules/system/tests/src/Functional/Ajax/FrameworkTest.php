@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Ajax;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Ajax\AddCssCommand;
+use Drupal\Core\Ajax\AddJsCommand;
 use Drupal\Core\Ajax\AlertCommand;
-use Drupal\Core\Ajax\AppendCommand;
 use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\SettingsCommand;
 use Drupal\Core\Asset\AttachedAssets;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
@@ -23,22 +24,27 @@ class FrameworkTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['node', 'ajax_test', 'ajax_forms_test'];
 
   /**
    * Verifies the Ajax rendering of a command in the settings.
    */
-  public function testAJAXRender() {
+  public function testAJAXRender(): void {
     // Verify that settings command is generated if JavaScript settings exist.
     $commands = $this->drupalGetAjax('ajax-test/render');
     $expected = new SettingsCommand(['ajax' => 'test'], TRUE);
-    $this->assertCommand($commands, $expected->render(), 'JavaScript settings command is present.');
+    $this->assertCommand($commands, $expected->render());
   }
 
   /**
    * Tests AjaxResponse::prepare() AJAX commands ordering.
    */
-  public function testOrder() {
+  public function testOrder(): void {
     $expected_commands = [];
 
     // Expected commands, in a very specific order.
@@ -48,24 +54,17 @@ class FrameworkTest extends BrowserTestBase {
     $renderer = \Drupal::service('renderer');
     $build['#attached']['library'][] = 'ajax_test/order-css-command';
     $assets = AttachedAssets::createFromRenderArray($build);
-    $css_render_array = $css_collection_renderer->render($asset_resolver->getCssAssets($assets, FALSE));
-    $expected_commands[1] = new AddCssCommand($renderer->renderRoot($css_render_array));
+    $css_render_array = $css_collection_renderer->render($asset_resolver->getCssAssets($assets, FALSE, \Drupal::languageManager()->getCurrentLanguage()));
+    $expected_commands[1] = new AddCssCommand(array_column($css_render_array, '#attributes'));
     $build['#attached']['library'][] = 'ajax_test/order-header-js-command';
     $build['#attached']['library'][] = 'ajax_test/order-footer-js-command';
     $assets = AttachedAssets::createFromRenderArray($build);
-    list($js_assets_header, $js_assets_footer) = $asset_resolver->getJsAssets($assets, FALSE);
+    [$js_assets_header, $js_assets_footer] = $asset_resolver->getJsAssets($assets, FALSE, \Drupal::languageManager()->getCurrentLanguage());
     $js_header_render_array = $js_collection_renderer->render($js_assets_header);
     $js_footer_render_array = $js_collection_renderer->render($js_assets_footer);
-    $expected_commands[2] = new PrependCommand('head', $js_header_render_array);
-    $expected_commands[3] = new AppendCommand('body', $js_footer_render_array);
+    $expected_commands[2] = new AddJsCommand(array_column($js_header_render_array, '#attributes'), 'head');
+    $expected_commands[3] = new AddJsCommand(array_column($js_footer_render_array, '#attributes'));
     $expected_commands[4] = new HtmlCommand('body', 'Hello, world!');
-
-    // Load any page with at least one CSS file, at least one JavaScript file
-    // and at least one #ajax-powered element. The latter is an assumption of
-    // drupalPostAjaxForm(), the two former are assumptions of the Ajax
-    // renderer.
-    // @todo refactor AJAX Framework + tests to make less assumptions.
-    $this->drupalGet('ajax_forms_test_lazy_load_form');
 
     // Verify AJAX command order — this should always be the order:
     // 1. CSS files
@@ -82,14 +81,14 @@ class FrameworkTest extends BrowserTestBase {
   /**
    * Tests the behavior of an error alert command.
    */
-  public function testAJAXRenderError() {
+  public function testAJAXRenderError(): void {
     // Verify custom error message.
     $edit = [
       'message' => 'Custom error message.',
     ];
     $commands = $this->drupalGetAjax('ajax-test/render-error', ['query' => $edit]);
     $expected = new AlertCommand($edit['message']);
-    $this->assertCommand($commands, $expected->render(), 'Custom error message is output.');
+    $this->assertCommand($commands, $expected->render());
   }
 
   /**
@@ -109,12 +108,14 @@ class FrameworkTest extends BrowserTestBase {
    * the actual command contains additional settings that aren't part of
    * $needle.
    *
-   * @param $haystack
+   * @param array $haystack
    *   An array of rendered Ajax commands returned by the server.
-   * @param $needle
+   * @param array $needle
    *   Array of info we're expecting in one of those commands.
+   *
+   * @internal
    */
-  protected function assertCommand($haystack, $needle) {
+  protected function assertCommand(array $haystack, array $needle): void {
     $found = FALSE;
     foreach ($haystack as $command) {
       // If the command has additional settings that we're not testing for, do
@@ -148,7 +149,7 @@ class FrameworkTest extends BrowserTestBase {
    *   Decoded JSON.
    */
   protected function drupalGetAjax($path, array $options = [], array $headers = []) {
-    $headers[] = 'X-Requested-With: XMLHttpRequest';
+    $headers = ['X-Requested-With' => 'XMLHttpRequest'];
     if (!isset($options['query'][MainContentViewSubscriber::WRAPPER_FORMAT])) {
       $options['query'][MainContentViewSubscriber::WRAPPER_FORMAT] = 'drupal_ajax';
     }

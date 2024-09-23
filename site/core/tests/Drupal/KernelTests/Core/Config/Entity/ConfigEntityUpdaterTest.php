@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
@@ -15,16 +17,14 @@ use Drupal\KernelTests\KernelTestBase;
 class ConfigEntityUpdaterTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['config_test'];
+  protected static $modules = ['config_test', 'system'];
 
   /**
    * @covers ::update
    */
-  public function testUpdate() {
+  public function testUpdate(): void {
     // Create some entities to update.
     $storage = $this->container->get('entity_type.manager')->getStorage('config_test');
     for ($i = 0; $i < 15; $i++) {
@@ -58,8 +58,9 @@ class ConfigEntityUpdaterTest extends KernelTestBase {
     $this->assertEquals('config_test_9', $entities['config_test_9']->label());
     $this->assertEquals('config_test_10', $entities['config_test_10']->label());
     $this->assertEquals('config_test_14', $entities['config_test_14']->label());
-    $this->assertEquals(15, $sandbox['config_entity_updater:config_test']['count']);
-    $this->assertCount(5, $sandbox['config_entity_updater:config_test']['entities']);
+    $this->assertEquals(15, $sandbox['config_entity_updater']['count']);
+    $this->assertEquals('config_test', $sandbox['config_entity_updater']['entity_type']);
+    $this->assertCount(5, $sandbox['config_entity_updater']['entities']);
     $this->assertEquals(10 / 15, $sandbox['#finished']);
 
     // Update the rest.
@@ -70,13 +71,13 @@ class ConfigEntityUpdaterTest extends KernelTestBase {
     $this->assertEquals('config_test_10 (updated)', $entities['config_test_10']->label());
     $this->assertEquals('config_test_14 (updated)', $entities['config_test_14']->label());
     $this->assertEquals(1, $sandbox['#finished']);
-    $this->assertCount(0, $sandbox['config_entity_updater:config_test']['entities']);
+    $this->assertCount(0, $sandbox['config_entity_updater']['entities']);
   }
 
   /**
    * @covers ::update
    */
-  public function testUpdateDefaultCallback() {
+  public function testUpdateDefaultCallback(): void {
     // Create some entities to update.
     $storage = $this->container->get('entity_type.manager')->getStorage('config_test');
     for ($i = 0; $i < 15; $i++) {
@@ -91,37 +92,50 @@ class ConfigEntityUpdaterTest extends KernelTestBase {
     new Settings($settings);
     $updater = $this->container->get('class_resolver')->getInstanceFromDefinition(ConfigEntityUpdater::class);
     // Cause a dependency to be added during an update.
-    \Drupal::state()->set('config_test_new_dependency', 'added_dependency');
+    \Drupal::state()->set('config_test_new_dependency', 'system');
 
     // This should run against the first 10 entities.
     $updater->update($sandbox, 'config_test');
     $entities = $storage->loadMultiple();
-    $this->assertEquals(['added_dependency'], $entities['config_test_7']->getDependencies()['module']);
-    $this->assertEquals(['added_dependency'], $entities['config_test_8']->getDependencies()['module']);
+    $this->assertEquals(['system'], $entities['config_test_7']->getDependencies()['module']);
+    $this->assertEquals(['system'], $entities['config_test_8']->getDependencies()['module']);
     $this->assertEquals([], $entities['config_test_9']->getDependencies());
     $this->assertEquals([], $entities['config_test_14']->getDependencies());
-    $this->assertEquals(15, $sandbox['config_entity_updater:config_test']['count']);
-    $this->assertCount(6, $sandbox['config_entity_updater:config_test']['entities']);
+    $this->assertEquals(15, $sandbox['config_entity_updater']['count']);
+    $this->assertCount(6, $sandbox['config_entity_updater']['entities']);
     $this->assertEquals(9 / 15, $sandbox['#finished']);
 
     // Update the rest.
     $updater->update($sandbox, 'config_test');
     $entities = $storage->loadMultiple();
-    $this->assertEquals(['added_dependency'], $entities['config_test_9']->getDependencies()['module']);
-    $this->assertEquals(['added_dependency'], $entities['config_test_14']->getDependencies()['module']);
+    $this->assertEquals(['system'], $entities['config_test_9']->getDependencies()['module']);
+    $this->assertEquals(['system'], $entities['config_test_14']->getDependencies()['module']);
     $this->assertEquals(1, $sandbox['#finished']);
-    $this->assertCount(0, $sandbox['config_entity_updater:config_test']['entities']);
+    $this->assertCount(0, $sandbox['config_entity_updater']['entities']);
   }
 
   /**
    * @covers ::update
    */
-  public function testUpdateException() {
+  public function testUpdateException(): void {
     $this->enableModules(['entity_test']);
-    $this->setExpectedException(\InvalidArgumentException::class, 'The provided entity type ID \'entity_test_mul_changed\' is not a configuration entity type');
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('The provided entity type ID \'entity_test_mul_changed\' is not a configuration entity type');
     $updater = $this->container->get('class_resolver')->getInstanceFromDefinition(ConfigEntityUpdater::class);
     $sandbox = [];
     $updater->update($sandbox, 'entity_test_mul_changed');
+  }
+
+  /**
+   * @covers ::update
+   */
+  public function testUpdateOncePerUpdateException(): void {
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('Updating multiple entity types in the same update function is not supported');
+    $updater = $this->container->get('class_resolver')->getInstanceFromDefinition(ConfigEntityUpdater::class);
+    $sandbox = [];
+    $updater->update($sandbox, 'config_test');
+    $updater->update($sandbox, 'config_query_test');
   }
 
 }

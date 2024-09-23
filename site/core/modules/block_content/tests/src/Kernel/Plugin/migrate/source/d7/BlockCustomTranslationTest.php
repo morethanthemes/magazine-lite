@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel\Plugin\migrate\source\d7;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
 
+// cspell:ignore objectid objectindex plid
+
 /**
- * Tests i18n custom block translations source plugin.
+ * Tests i18n content block translations source plugin.
  *
  * @covers \Drupal\block_content\Plugin\migrate\source\d7\BlockCustomTranslation
  *
@@ -16,16 +20,16 @@ class BlockCustomTranslationTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block_content', 'migrate_drupal'];
+  protected static $modules = ['block_content', 'migrate_drupal'];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     // The source data.
-    $tests[0]['database']['block_custom'] = [
+    $tests[0]['source_data']['block_custom'] = [
       [
         'bid' => 1,
         'body' => 'box 1 body',
@@ -38,9 +42,15 @@ class BlockCustomTranslationTest extends MigrateSqlSourceTestBase {
         'info' => 'box 2 title',
         'format' => '2',
       ],
+      [
+        'bid' => 4,
+        'body' => 'box 2 body',
+        'info' => 'box 2 title',
+        'format' => '2',
+      ],
     ];
 
-    $tests[0]['database']['i18n_string'] = [
+    $tests[0]['source_data']['i18n_string'] = [
       [
         'lid' => 1,
         'objectid' => 1,
@@ -65,9 +75,17 @@ class BlockCustomTranslationTest extends MigrateSqlSourceTestBase {
         'objectindex' => 2,
         'format' => 2,
       ],
+      [
+        'lid' => 4,
+        'objectid' => 4,
+        'type' => 'block',
+        'property' => 'body',
+        'objectindex' => 4,
+        'format' => 2,
+      ],
     ];
 
-    $tests[0]['database']['locales_target'] = [
+    $tests[0]['source_data']['locales_target'] = [
       [
         'lid' => 1,
         'language' => 'fr',
@@ -94,7 +112,7 @@ class BlockCustomTranslationTest extends MigrateSqlSourceTestBase {
       ],
     ];
 
-    $tests[0]['database']['system'] = [
+    $tests[0]['source_data']['system'] = [
       [
         'type' => 'module',
         'name' => 'system',
@@ -103,7 +121,7 @@ class BlockCustomTranslationTest extends MigrateSqlSourceTestBase {
       ],
     ];
 
-    $tests[0]['expected_results'] = [
+    $tests[0]['expected_data'] = [
       [
         'lid' => '1',
         'property' => 'title',

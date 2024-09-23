@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\editor\Kernel;
 
 use Drupal\editor\Entity\Editor;
@@ -16,15 +18,15 @@ class EditorFilterIntegrationTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['filter', 'editor', 'editor_test'];
+  protected static $modules = ['filter', 'editor', 'editor_test'];
 
   /**
    * Tests text format removal or disabling.
    */
-  public function testTextFormatIntegration() {
+  public function testTextFormatIntegration(): void {
     // Create an arbitrary text format.
     $format = FilterFormat::create([
-      'format' => mb_strtolower($this->randomMachineName()),
+      'format' => $this->randomMachineName(),
       'name' => $this->randomString(),
     ]);
     $format->save();

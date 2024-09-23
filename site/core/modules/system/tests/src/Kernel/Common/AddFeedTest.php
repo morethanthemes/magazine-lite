@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Common;
 
 use Drupal\Core\Url;
@@ -15,12 +17,12 @@ class AddFeedTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['system'];
+  protected static $modules = ['system'];
 
   /**
    * Tests attaching feeds with paths, URLs, and titles.
    */
-  public function testBasicFeedAddNoTitle() {
+  public function testBasicFeedAddNoTitle(): void {
     $path = $this->randomMachineName(12);
     $external_url = 'http://' . $this->randomMachineName(12) . '/' . $this->randomMachineName(12);
     $fully_qualified_local_url = Url::fromUri('base:' . $this->randomMachineName(12), ['absolute' => TRUE])->toString();
@@ -68,7 +70,7 @@ class AddFeedTest extends KernelTestBase {
     $this->setRawContent($response->getContent());
     // Assert that the content contains the RSS links we specified.
     foreach ($urls as $description => $feed_info) {
-      $this->assertPattern($this->urlToRSSLinkPattern($feed_info['url'], $feed_info['title']), format_string('Found correct feed header for %description', ['%description' => $description]));
+      $this->assertPattern($this->urlToRSSLinkPattern($feed_info['url'], $feed_info['title']));
     }
   }
 
@@ -87,14 +89,30 @@ class AddFeedTest extends KernelTestBase {
    *
    * @see https://www.drupal.org/node/1211668
    */
-  public function testFeedIconEscaping() {
+  public function testFeedIconEscaping(): void {
     $variables = [
       '#theme' => 'feed_icon',
       '#url' => 'node',
       '#title' => '<>&"\'',
     ];
-    $text = \Drupal::service('renderer')->renderRoot($variables);
-    $this->assertEqual(trim(strip_tags($text)), 'Subscribe to &lt;&gt;&amp;&quot;&#039;', 'feed_icon template escapes reserved HTML characters.');
+    $text = (string) \Drupal::service('renderer')->renderRoot($variables);
+    $this->assertEquals('Subscribe to &lt;&gt;&amp;&quot;&#039;', trim(strip_tags($text)), 'feed_icon template escapes reserved HTML characters.');
+  }
+
+  /**
+   * Tests that the rendered output contains specific attributes.
+   */
+  public function testAttributeAdded(): void {
+    $variables = [
+      '#theme' => 'feed_icon',
+      '#url' => 'node/add/',
+      '#title' => 'testing title',
+      '#attributes' => ['title' => 'some title', 'class' => ['some-class']],
+    ];
+    $rendered_output = (string) \Drupal::service('renderer')->renderRoot($variables);
+
+    // Check if the class 'some-class' is present in the rendered output.
+    $this->assertStringContainsString('some-class', $rendered_output, "The class 'some-class' should be present in the rendered output.");
   }
 
 }

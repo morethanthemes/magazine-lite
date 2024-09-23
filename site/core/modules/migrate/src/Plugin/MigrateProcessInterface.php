@@ -9,20 +9,13 @@ use Drupal\migrate\Row;
 /**
  * An interface for migrate process plugins.
  *
- * A process plugin will typically implement the transform() method to perform
- * its work. However, it is possible instead for a process plugin to use any
- * number of methods, thus offering different alternatives ways of processing.
- * In this case, the transform() method should not be implemented, and the
- * plugin configuration must provide the name of the method to be called via the
- * "method" key. Each method must have the same signature as transform().
- * The base class \Drupal\migrate\ProcessPluginBase takes care of implementing
- * transform() and calling the configured method. See
- * \Drupal\migrate\Plugin\migrate\process\SkipOnEmpty and
- * d6_field_instance_widget_settings.yml for examples.
+ * Migrate process plugins transform the input value.For example, transform a
+ * human provided name into a machine name, look up an identifier in a previous
+ * migration and so on.
  *
  * @see \Drupal\migrate\Plugin\MigratePluginManager
  * @see \Drupal\migrate\ProcessPluginBase
- * @see \Drupal\migrate\Annotation\MigrateProcessPlugin
+ * @see \Drupal\migrate\Attribute\MigrateProcess
  * @see plugin_api
  *
  * @ingroup migration
@@ -44,7 +37,7 @@ interface MigrateProcessInterface extends PluginInspectionInterface {
    *   The destination property currently worked on. This is only used together
    *   with the $row above.
    *
-   * @return string|array
+   * @return mixed
    *   The newly transformed value.
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property);
@@ -58,5 +51,18 @@ interface MigrateProcessInterface extends PluginInspectionInterface {
    *   is an array.
    */
   public function multiple();
+
+  /**
+   * Determines if the pipeline should stop processing.
+   *
+   * @return bool
+   *   A boolean value indicating if the pipeline processing should stop.
+   */
+  public function isPipelineStopped(): bool;
+
+  /**
+   * Resets the internal data of a plugin.
+   */
+  public function reset(): void;
 
 }

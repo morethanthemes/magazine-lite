@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -15,14 +17,14 @@ class LayoutBuilderFieldLayoutCompatibilityTest extends LayoutBuilderCompatibili
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'field_layout',
   ];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->display
@@ -33,7 +35,7 @@ class LayoutBuilderFieldLayoutCompatibilityTest extends LayoutBuilderCompatibili
   /**
    * Tests the compatibility of Layout Builder and Field Layout.
    */
-  public function testCompatibility() {
+  public function testCompatibility(): void {
     // Ensure that the configurable field is shown in the correct region and
     // that the non-configurable field is shown outside the layout.
     $expected_fields = [
@@ -73,7 +75,7 @@ class LayoutBuilderFieldLayoutCompatibilityTest extends LayoutBuilderCompatibili
     $this->assertNotEmpty($this->cssSelect('.layout--onecol'));
 
     // Removing the layout restores the original rendering of the entity.
-    $field_list->removeSection(0);
+    $field_list->removeAllSections();
     $this->entity->save();
     $this->assertFieldAttributes($this->entity, $expected_fields);
   }

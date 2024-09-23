@@ -5,6 +5,8 @@
  * Provide views data for statistics.module.
  */
 
+// cspell:ignore daycount totalcount
+
 /**
  * Implements hook_views_data().
  */
@@ -24,7 +26,7 @@ function statistics_views_data() {
     'field' => [
       'id' => 'statistics_numeric',
       'click sortable' => TRUE,
-     ],
+    ],
     'filter' => [
       'id' => 'numeric',
     ],
@@ -42,7 +44,7 @@ function statistics_views_data() {
     'field' => [
       'id' => 'statistics_numeric',
       'click sortable' => TRUE,
-     ],
+    ],
     'filter' => [
       'id' => 'numeric',
     ],

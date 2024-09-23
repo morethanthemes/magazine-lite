@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Database\Database;
@@ -12,6 +14,11 @@ use Symfony\Component\HttpFoundation\Request;
  * @group Installer
  */
 class InstallerExistingSettingsTest extends InstallerTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -42,13 +49,22 @@ class InstallerExistingSettingsTest extends InstallerTestBase {
     // not be available at this point in the install process.
     $site_path = DrupalKernel::findSitePath(Request::createFromGlobals());
     // Pre-configure config directories.
-    $this->settings['config_directories'] = [
-      CONFIG_SYNC_DIRECTORY => (object) [
-        'value' => $site_path . '/files/config_sync',
-        'required' => TRUE,
-      ],
+    $this->settings['settings']['config_sync_directory'] = (object) [
+      'value' => $site_path . '/files/config_sync',
+      'required' => TRUE,
     ];
-    mkdir($this->settings['config_directories'][CONFIG_SYNC_DIRECTORY]->value, 0777, TRUE);
+    mkdir($this->settings['settings']['config_sync_directory']->value, 0777, TRUE);
+  }
+
+  /**
+   * Visits the interactive installer.
+   */
+  protected function visitInstaller() {
+    // Should redirect to the installer.
+    $this->drupalGet($GLOBALS['base_url']);
+    // Ensure no database tables have been created yet.
+    $this->assertSame([], Database::getConnection()->schema()->findTables('%'));
+    $this->assertSession()->addressEquals($GLOBALS['base_url'] . '/core/install.php');
   }
 
   /**
@@ -62,10 +78,10 @@ class InstallerExistingSettingsTest extends InstallerTestBase {
   /**
    * Verifies that installation succeeded.
    */
-  public function testInstaller() {
-    $this->assertUrl('user/1');
-    $this->assertResponse(200);
-    $this->assertEqual('testing', \Drupal::installProfile());
+  public function testInstaller(): void {
+    $this->assertSession()->addressEquals('user/1');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertEquals('testing', \Drupal::installProfile());
   }
 
 }

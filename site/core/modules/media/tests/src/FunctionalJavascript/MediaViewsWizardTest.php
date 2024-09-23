@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\views\Views;
@@ -15,16 +17,21 @@ use Drupal\views\Views;
 class MediaViewsWizardTest extends MediaJavascriptTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Tests adding a view of media.
    */
-  public function testMediaWizard() {
+  public function testMediaWizard(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();
 
     $this->createMediaType('test');
 
-    $view_id = strtolower($this->randomMachineName(16));
+    $view_id = $this->randomMachineName(16);
     $this->drupalGet('admin/structure/views/add');
     $page->fillField('label', $view_id);
     $this->waitUntilVisible('.machine-name-value');
@@ -43,7 +50,7 @@ class MediaViewsWizardTest extends MediaJavascriptTestBase {
     // Check for the default filters.
     $this->assertSame($view->filter['status']->table, 'media_field_data');
     $this->assertSame($view->filter['status']->field, 'status');
-    $this->assertTrue($view->filter['status']->value);
+    $this->assertSame($view->filter['status']->value, '1');
     // Check for the default fields.
     $this->assertSame($view->field['name']->table, 'media_field_data');
     $this->assertSame($view->field['name']->field, 'name');
@@ -53,12 +60,12 @@ class MediaViewsWizardTest extends MediaJavascriptTestBase {
   /**
    * Tests adding a view of media revisions.
    */
-  public function testMediaRevisionWizard() {
+  public function testMediaRevisionWizard(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();
 
-    $view_id = strtolower($this->randomMachineName(16));
+    $view_id = $this->randomMachineName(16);
     $this->drupalGet('admin/structure/views/add');
     $page->fillField('label', $view_id);
     $this->waitUntilVisible('.machine-name-value');
@@ -77,7 +84,7 @@ class MediaViewsWizardTest extends MediaJavascriptTestBase {
     // Check for the default filters.
     $this->assertSame($view->filter['status']->table, 'media_field_revision');
     $this->assertSame($view->filter['status']->field, 'status');
-    $this->assertTrue($view->filter['status']->value);
+    $this->assertSame($view->filter['status']->value, '1');
 
     // Check for the default fields.
     $this->assertSame($view->field['name']->table, 'media_field_revision');

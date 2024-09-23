@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+
+// cspell:ignore objectid
 
 /**
  * Tests the field label and description translation source plugin.
@@ -15,12 +19,16 @@ class FieldInstanceLabelDescriptionTranslationTest extends MigrateSqlSourceTestB
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['config_translation', 'migrate_drupal', 'field'];
+  protected static $modules = [
+    'config_translation',
+    'migrate_drupal',
+    'field',
+  ];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $test = [];
 
     // The source data.
@@ -59,7 +67,7 @@ class FieldInstanceLabelDescriptionTranslationTest extends MigrateSqlSourceTestB
       ],
     ];
 
-    $test[0]['expected_results'] = [
+    $test[0]['expected_data'] = [
       [
         'property' => 'widget_label',
         'translation' => "fr - Integer Field",

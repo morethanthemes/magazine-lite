@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\Plugin;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\migrate\Kernel\MigrateTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+
+// cspell:ignore tabarnak
 
 /**
  * Tests the EntityRevision destination plugin.
@@ -19,7 +23,7 @@ class EntityRevisionTest extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'content_translation',
     'field',
     'filter',
@@ -33,18 +37,18 @@ class EntityRevisionTest extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
-    $this->installConfig('node');
-    $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
+    $this->installConfig('node');
+    $this->installSchema('node', ['node_access']);
   }
 
   /**
    * Tests that EntityRevision correctly handles revision translations.
    */
-  public function testRevisionTranslation() {
+  public function testRevisionTranslation(): void {
     ConfigurableLanguage::createFromLangcode('fr')->save();
 
     /** @var \Drupal\node\NodeInterface $node */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -13,11 +15,14 @@ use Drupal\Tests\BrowserTestBase;
 class BlockLanguageCacheTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['block', 'language', 'menu_ui'];
+  protected static $modules = ['block', 'language', 'menu_ui'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * List of langcodes.
@@ -26,7 +31,10 @@ class BlockLanguageCacheTest extends BrowserTestBase {
    */
   protected $langcodes = [];
 
-  protected function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     // Create test languages.
@@ -44,7 +52,7 @@ class BlockLanguageCacheTest extends BrowserTestBase {
   /**
    * Creates a block in a language, check blocks page in all languages.
    */
-  public function testBlockLinks() {
+  public function testBlockLinks(): void {
     // Create admin user to be able to access block admin.
     $admin_user = $this->drupalCreateUser([
       'administer blocks',
@@ -62,14 +70,15 @@ class BlockLanguageCacheTest extends BrowserTestBase {
     // Create a menu in the default language.
     $edit['label'] = $this->randomMachineName();
     $edit['id'] = mb_strtolower($edit['label']);
-    $this->drupalPostForm('admin/structure/menu/add', $edit, t('Save'));
-    $this->assertText(t('Menu @label has been added.', ['@label' => $edit['label']]));
+    $this->drupalGet('admin/structure/menu/add');
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->pageTextContains('Menu ' . $edit['label'] . ' has been added.');
 
     // Check that the block is listed for all languages.
     foreach ($this->langcodes as $langcode) {
       $this->drupalGet('admin/structure/block', ['language' => $langcode]);
       $this->clickLink('Place block');
-      $this->assertText($edit['label']);
+      $this->assertSession()->pageTextContains($edit['label']);
     }
   }
 

@@ -1,22 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Rest;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\rest\Functional\BcTimestampNormalizerUnixTestTrait;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 use GuzzleHttp\RequestOptions;
 
 abstract class TermResourceTestBase extends EntityResourceTestBase {
 
-  use BcTimestampNormalizerUnixTestTrait;
-
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['taxonomy', 'path'];
+  protected static $modules = ['content_translation', 'path', 'taxonomy'];
 
   /**
    * {@inheritdoc}
@@ -34,6 +33,17 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
    * @var \Drupal\taxonomy\TermInterface
    */
   protected $entity;
+
+  /**
+   * Marks some tests as skipped because XML cannot be deserialized.
+   *
+   * @before
+   */
+  public function termResourceTestBaseSkipTests(): void {
+    if (static::$format === 'xml' && $this->name() === 'testPatchPath') {
+      $this->markTestSkipped('Deserialization of the XML format is not supported.');
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -111,6 +121,7 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
           ],
         ];
         break;
+
       case [2]:
         $expected_parent_normalization = [
           [
@@ -121,6 +132,7 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
           ],
         ];
         break;
+
       case [0, 2]:
         $expected_parent_normalization = [
           [
@@ -134,6 +146,7 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
           ],
         ];
         break;
+
       case [3, 2]:
         $expected_parent_normalization = [
           [
@@ -154,6 +167,9 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
 
     return [
       'tid' => [
+        ['value' => 1],
+      ],
+      'revision_id' => [
         ['value' => 1],
       ],
       'uuid' => [
@@ -186,7 +202,10 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
         ],
       ],
       'changed' => [
-        $this->formatExpectedTimestampItemValues($this->entity->getChangedTime()),
+        [
+          'value' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'format' => \DateTime::RFC3339,
+        ],
       ],
       'default_langcode' => [
         [
@@ -201,6 +220,20 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
         ],
       ],
       'status' => [
+        [
+          'value' => TRUE,
+        ],
+      ],
+      'revision_created' => [
+        [
+          'value' => (new \DateTime())->setTimestamp((int) $this->entity->getRevisionCreationTime())
+            ->setTimezone(new \DateTimeZone('UTC'))
+            ->format(\DateTime::RFC3339),
+          'format' => \DateTime::RFC3339,
+        ],
+      ],
+      'revision_user' => [],
+      'revision_translation_affected' => [
         [
           'value' => TRUE,
         ],
@@ -220,12 +253,12 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
       ],
       'name' => [
         [
-          'value' => 'Dramallama',
+          'value' => 'Drama llama',
         ],
       ],
       'description' => [
         [
-          'value' => 'Dramallamas are the coolest camelids.',
+          'value' => 'Drama llamas are the coolest camelids.',
           'format' => NULL,
         ],
       ],
@@ -236,19 +269,19 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
    * {@inheritdoc}
    */
   protected function getExpectedUnauthorizedAccessMessage($method) {
-    if ($this->config('rest.settings')->get('bc_entity_resource_permissions')) {
-      return parent::getExpectedUnauthorizedAccessMessage($method);
-    }
-
     switch ($method) {
       case 'GET':
         return "The 'access content' permission is required and the taxonomy term must be published.";
+
       case 'POST':
         return "The following permissions are required: 'create terms in camelids' OR 'administer taxonomy'.";
+
       case 'PATCH':
         return "The following permissions are required: 'edit terms in camelids' OR 'administer taxonomy'.";
+
       case 'DELETE':
         return "The following permissions are required: 'delete terms in camelids' OR 'administer taxonomy'.";
+
       default:
         return parent::getExpectedUnauthorizedAccessMessage($method);
     }
@@ -261,7 +294,7 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
    *
    * @see \Drupal\Tests\rest\Functional\EntityResource\Node\NodeResourceTestBase::testPatchPath()
    */
-  public function testPatchPath() {
+  public function testPatchPath(): void {
     $this->initAuthentication();
     $this->provisionEntityResource();
     $this->setUpAuthorization('GET');
@@ -310,13 +343,13 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
    *
    * @dataProvider providerTestGetTermWithParent
    */
-  public function testGetTermWithParent(array $parent_term_ids) {
+  public function testGetTermWithParent(array $parent_term_ids): void {
     // Create all possible parent terms.
     Term::create(['vid' => Vocabulary::load('camelids')->id()])
       ->setName('Lamoids')
       ->save();
     Term::create(['vid' => Vocabulary::load('camelids')->id()])
-      ->setName('Wimoids')
+      ->setName('Camels')
       ->save();
 
     // Modify the entity under test to use the provided parent terms.
@@ -336,7 +369,7 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
     $this->assertSame($expected, $actual);
   }
 
-  public function providerTestGetTermWithParent() {
+  public static function providerTestGetTermWithParent() {
     return [
       'root parent: [0] (= no parent)' => [
         [0],
@@ -356,9 +389,9 @@ abstract class TermResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedUnauthorizedAccessCacheability() {
+  protected function getExpectedUnauthorizedEntityAccessCacheability($is_authenticated) {
     // @see \Drupal\taxonomy\TermAccessControlHandler::checkAccess()
-    return parent::getExpectedUnauthorizedAccessCacheability()
+    return parent::getExpectedUnauthorizedEntityAccessCacheability($is_authenticated)
       ->addCacheTags(['taxonomy_term:1']);
   }
 

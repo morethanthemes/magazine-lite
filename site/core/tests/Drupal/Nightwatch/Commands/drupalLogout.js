@@ -1,6 +1,3 @@
-import { execSync } from 'child_process';
-import { URL } from 'url';
-
 /**
  * Logs out from a Drupal site.
  *
@@ -16,9 +13,11 @@ import { URL } from 'url';
 exports.command = function drupalLogout({ silent = false } = {}, callback) {
   const self = this;
 
-  this.drupalRelativeURL('/user/logout');
+  this.drupalRelativeURL('/user/logout/confirm').submitForm(
+    '#user-logout-confirm',
+  );
 
-  this.drupalUserIsLoggedIn(sessionExists => {
+  this.drupalUserIsLoggedIn((sessionExists) => {
     if (silent) {
       if (sessionExists) {
         throw new Error('Logging out failed.');

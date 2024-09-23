@@ -58,7 +58,7 @@ class BookRemoveForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
     $this->node = $node;
     return parent::buildForm($form, $form_state);
   }
@@ -94,7 +94,7 @@ class BookRemoveForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->node->urlInfo();
+    return $this->node->toUrl();
   }
 
   /**

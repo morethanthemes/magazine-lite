@@ -4,7 +4,7 @@
  */
 
 .field--name-field-recipe-instruction .field__label {
-  margin: 1.184rem 0 1em 0;
+  margin: 0 0 1em 0;
   padding: 0 0 0.6em 0;
   border-bottom: 1px solid #eec2cb;
   font-family: "Scope One", Georgia, serif;
@@ -16,13 +16,12 @@
 @media screen and (min-width: 60rem) {
   /* 960px */
   .field--name-field-recipe-instruction .field__label {
-    margin: 2.369rem 0 1.5em 0;
+    margin: 0 0 1.5em 0;
     font-size: 1.77rem;
   }
 }
 .field--name-field-recipe-instruction ol {
-  margin-left: 0;
-  padding-left: 0;
+  padding: 0;
   list-style-type: none;
 }
 .field--name-field-recipe-instruction ol > li {
@@ -32,7 +31,7 @@
   list-style: none;
   counter-increment: step-counter;
 }
-[dir=rtl] .field--name-field-recipe-instruction ol > li {
+[dir="rtl"] .field--name-field-recipe-instruction ol > li {
   padding: 0 2.5em 0.6em 0;
 }
 .field--name-field-recipe-instruction ol > li::before {
@@ -43,7 +42,7 @@
   color: #cc2a00;
   font-size: 1.5rem;
 }
-[dir=rtl] .field--name-field-recipe-instruction ol > li::before {
+[dir="rtl"] .field--name-field-recipe-instruction ol > li::before {
   right: 0;
   left: auto;
 }

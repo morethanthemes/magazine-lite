@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\Core\Session\AccountInterface;
@@ -47,6 +49,7 @@ abstract class ModerationStateTestBase extends BrowserTestBase {
     'use editorial transition archive',
     'use editorial transition archived_draft',
     'use editorial transition archived_published',
+    'administer taxonomy',
   ];
 
   /**
@@ -57,22 +60,21 @@ abstract class ModerationStateTestBase extends BrowserTestBase {
   protected $workflow;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'content_moderation',
     'block',
     'block_content',
     'node',
     'entity_test',
+    'taxonomy',
   ];
 
   /**
    * Sets the test up.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->workflow = $this->createEditorialWorkflow();
     $this->adminUser = $this->drupalCreateUser($this->permissions);
@@ -112,18 +114,14 @@ abstract class ModerationStateTestBase extends BrowserTestBase {
     $this->drupalGet('admin/structure/types');
     $this->clickLink('Add content type');
 
-    // Check that the 'Create new revision' checkbox is checked and disabled.
-    $this->assertSession()->checkboxChecked('options[revision]');
-    $this->assertSession()->fieldDisabled('options[revision]');
-
     $edit = [
       'name' => $content_type_name,
       'type' => $content_type_id,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save content type'));
+    $this->submitForm($edit, 'Save');
 
     // Check the content type has been set to create new revisions.
-    $this->assertTrue(NodeType::load($content_type_id)->isNewRevision());
+    $this->assertTrue(NodeType::load($content_type_id)->shouldCreateNewRevision());
 
     if ($moderated) {
       $this->enableModerationThroughUi($content_type_id, $workflow_id);
@@ -140,9 +138,10 @@ abstract class ModerationStateTestBase extends BrowserTestBase {
    */
   public function enableModerationThroughUi($content_type_id, $workflow_id = 'editorial') {
     $this->drupalGet('/admin/config/workflow/workflows');
-    $this->assertLinkByHref('admin/config/workflow/workflows/manage/' . $workflow_id);
+    $this->assertSession()->linkByHrefExists('admin/config/workflow/workflows/manage/' . $workflow_id);
     $edit['bundles[' . $content_type_id . ']'] = TRUE;
-    $this->drupalPostForm('admin/config/workflow/workflows/manage/' . $workflow_id . '/type/node', $edit, t('Save'));
+    $this->drupalGet('admin/config/workflow/workflows/manage/' . $workflow_id . '/type/node');
+    $this->submitForm($edit, 'Save');
     // Ensure the parent environment is up-to-date.
     // @see content_moderation_workflow_insert()
     \Drupal::service('entity_type.bundle.info')->clearCachedBundles();
@@ -162,7 +161,7 @@ abstract class ModerationStateTestBase extends BrowserTestBase {
    */
   protected function grantUserPermissionToCreateContentOfType(AccountInterface $account, $content_type_id) {
     $role_ids = $account->getRoles(TRUE);
-    /* @var \Drupal\user\RoleInterface $role */
+    /** @var \Drupal\user\RoleInterface $role */
     $role_id = reset($role_ids);
     $role = Role::load($role_id);
     $role->grantPermission(sprintf('create %s content', $content_type_id));

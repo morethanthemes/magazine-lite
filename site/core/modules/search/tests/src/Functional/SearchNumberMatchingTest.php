@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -19,6 +21,11 @@ class SearchNumberMatchingTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected static $modules = ['dblog', 'node', 'search'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * A user with permission to administer nodes.
@@ -54,12 +61,20 @@ class SearchNumberMatchingTest extends BrowserTestBase {
    */
   protected $nodes;
 
-  protected function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
 
-    $this->testUser = $this->drupalCreateUser(['search content', 'access content', 'administer nodes', 'access site reports']);
+    $this->testUser = $this->drupalCreateUser([
+      'search content',
+      'access content',
+      'administer nodes',
+      'access site reports',
+    ]);
     $this->drupalLogin($this->testUser);
 
     foreach ($this->numbers as $num) {
@@ -74,22 +89,21 @@ class SearchNumberMatchingTest extends BrowserTestBase {
     // Run cron to ensure the content is indexed.
     $this->cronRun();
     $this->drupalGet('admin/reports/dblog');
-    $this->assertText(t('Cron run completed'), 'Log shows cron run completed');
+    $this->assertSession()->pageTextContains('Cron run completed');
   }
 
   /**
    * Tests that all the numbers can be searched.
    */
-  public function testNumberSearching() {
+  public function testNumberSearching(): void {
     for ($i = 0; $i < count($this->numbers); $i++) {
       $node = $this->nodes[$i];
 
       // Verify that the node title does not appear on the search page
       // with a dummy search.
-      $this->drupalPostForm('search/node',
-        ['keys' => 'foo'],
-        t('Search'));
-      $this->assertNoText($node->label(), format_string('%number: node title not shown in dummy search', ['%number' => $i]));
+      $this->drupalGet('search/node');
+      $this->submitForm(['keys' => 'foo'], 'Search');
+      $this->assertSession()->pageTextNotContains($node->label());
 
       // Now verify that we can find node i by searching for any of the
       // numbers.
@@ -99,10 +113,9 @@ class SearchNumberMatchingTest extends BrowserTestBase {
         // "not keyword" when searching.
         $number = ltrim($number, '-');
 
-        $this->drupalPostForm('search/node',
-          ['keys' => $number],
-          t('Search'));
-        $this->assertText($node->label(), format_string('%i: node title shown (search found the node) in search for number %number', ['%i' => $i, '%number' => $number]));
+        $this->drupalGet('search/node');
+        $this->submitForm(['keys' => $number], 'Search');
+        $this->assertSession()->pageTextContains($node->label());
       }
     }
 

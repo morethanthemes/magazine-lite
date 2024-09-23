@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\system\Kernel\Scripts\DbCommandBaseTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\system\Kernel\Scripts;
 
@@ -26,9 +23,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 class DbCommandBaseTest extends KernelTestBase {
 
   /**
-   * Test specifying a database key.
+   * Tests specifying a database key.
    */
-  public function testSpecifyDatabaseKey() {
+  public function testSpecifyDatabaseKey(): void {
     $command = new DbCommandBaseTester();
     $command_tester = new CommandTester($command);
 
@@ -44,20 +41,20 @@ class DbCommandBaseTest extends KernelTestBase {
   /**
    * Invalid database names will throw a useful exception.
    */
-  public function testSpecifyDatabaseDoesNotExist() {
+  public function testSpecifyDatabaseDoesNotExist(): void {
     $command = new DbCommandBaseTester();
     $command_tester = new CommandTester($command);
     $command_tester->execute([
       '--database' => 'dne',
     ]);
-    $this->setExpectedException(ConnectionNotDefinedException::class);
+    $this->expectException(ConnectionNotDefinedException::class);
     $command->getDatabaseConnection($command_tester->getInput());
   }
 
   /**
-   * Test supplying database connection as a url.
+   * Tests supplying database connection as a URL.
    */
-  public function testSpecifyDbUrl() {
+  public function testSpecifyDbUrl(): void {
     $command = new DbCommandBaseTester();
     $command_tester = new CommandTester($command);
     $command_tester->execute([
@@ -73,9 +70,9 @@ class DbCommandBaseTest extends KernelTestBase {
   }
 
   /**
-   * Test specifying a prefix for different connections.
+   * Tests specifying a prefix for different connections.
    */
-  public function testPrefix() {
+  public function testPrefix(): void {
     if (Database::getConnection()->driver() == 'sqlite') {
       $this->markTestSkipped('SQLITE modifies the prefixes so we cannot effectively test it');
     }
@@ -87,19 +84,21 @@ class DbCommandBaseTest extends KernelTestBase {
       '--database' => 'magic_db',
       '--prefix' => 'extra',
     ]);
-    $this->assertEquals('extra', $command->getDatabaseConnection($command_tester->getInput())->tablePrefix());
+    $this->assertEquals('extra', $command->getDatabaseConnection($command_tester->getInput())->getPrefix());
 
     $command_tester->execute([
       '-db-url' => Database::getConnectionInfoAsUrl(),
       '--prefix' => 'extra2',
     ]);
-    $this->assertEquals('extra2', $command->getDatabaseConnection($command_tester->getInput())->tablePrefix());
+    $this->assertEquals('extra2', $command->getDatabaseConnection($command_tester->getInput())->getPrefix());
 
-    // This breaks simpletest cleanup.
+    // This breaks test cleanup.
+    // @code
     //    $command_tester->execute([
     //      '--prefix' => 'notsimpletest',
     //    ]);
     //    $this->assertEquals('notsimpletest', $command->getDatabaseConnection($command_tester->getInput())->tablePrefix());
+    // @endcode
   }
 
 }
@@ -127,8 +126,9 @@ class DbCommandBaseTester extends DbCommandBase {
   /**
    * {@inheritdoc}
    */
-  protected function execute(InputInterface $input, OutputInterface $output) {
+  protected function execute(InputInterface $input, OutputInterface $output): int {
     // Empty implementation for testing.
+    return 0;
   }
 
 }

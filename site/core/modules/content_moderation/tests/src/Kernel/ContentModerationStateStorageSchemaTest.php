@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Kernel;
 
 use Drupal\content_moderation\Entity\ContentModerationState;
@@ -21,7 +23,7 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'content_moderation',
     'user',
@@ -34,7 +36,7 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installSchema('node', 'node_access');
@@ -46,6 +48,7 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
 
     NodeType::create([
       'type' => 'example',
+      'name' => 'Example',
     ])->save();
     $workflow = $this->createEditorialWorkflow();
     $workflow->getTypePlugin()->addEntityTypeAndBundle('node', 'example');
@@ -53,11 +56,11 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
   }
 
   /**
-   * Test the ContentModerationState unique keys.
+   * Tests the ContentModerationState unique keys.
    *
    * @covers ::getEntitySchema
    */
-  public function testUniqueKeys() {
+  public function testUniqueKeys(): void {
     // Create a node which will create a new ContentModerationState entity.
     $node = Node::create([
       'title' => 'Test title',
@@ -124,8 +127,10 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
    *   An array of entity values.
    * @param bool $has_exception
    *   If an exception should be triggered when saving the entity.
+   *
+   * @internal
    */
-  protected function assertStorageException(array $values, $has_exception) {
+  protected function assertStorageException(array $values, bool $has_exception): void {
     $defaults = [
       'moderation_state' => 'draft',
       'workflow' => 'editorial',

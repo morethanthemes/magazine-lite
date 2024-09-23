@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 /**
@@ -32,7 +34,15 @@ EOF;
    */
   protected function setUpSettings() {
     // There are errors therefore there is nothing to do here.
-    return;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUpRequirementsProblem() {
+    // The parent method asserts that there are no requirements errors, but
+    // this test expects a requirements error in the test method below.
+    // Therefore, we override this method to suppress the parent's assertions.
   }
 
   /**
@@ -40,7 +50,6 @@ EOF;
    */
   protected function setUpSite() {
     // There are errors therefore there is nothing to do here.
-    return;
   }
 
   /**
@@ -55,10 +64,10 @@ EOF;
   /**
    * Confirms the installation has failed and the expected error is displayed.
    */
-  public function testConfigSync() {
-    $this->assertTitle('Requirements problem | Drupal');
-    $this->assertText($this->profile);
-    $this->assertText('The selected profile has a hook_install() implementation and therefore can not be installed from configuration.');
+  public function testConfigSync(): void {
+    $this->assertSession()->titleEquals('Requirements problem | Drupal');
+    $this->assertSession()->pageTextContains($this->profile);
+    $this->assertSession()->pageTextContains('The selected profile has a hook_install() implementation and therefore can not be installed from configuration.');
   }
 
 }

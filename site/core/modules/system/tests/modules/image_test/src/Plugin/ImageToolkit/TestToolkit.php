@@ -4,20 +4,21 @@ namespace Drupal\image_test\Plugin\ImageToolkit;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkit;
 use Drupal\Core\ImageToolkit\ImageToolkitBase;
 use Drupal\Core\ImageToolkit\ImageToolkitOperationManagerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a Test toolkit for image manipulation within Drupal.
- *
- * @ImageToolkit(
- *   id = "test",
- *   title = @Translation("A dummy toolkit that works")
- * )
  */
+#[ImageToolkit(
+  id: "test",
+  title: new TranslatableMarkup("A dummy toolkit that works"),
+)]
 class TestToolkit extends ImageToolkitBase {
 
   /**
@@ -164,7 +165,7 @@ class TestToolkit extends ImageToolkitBase {
    * @see \Drupal\Tests\system\Functional\Image\ToolkitTestBase::imageTestGetAllCalls()
    */
   protected function logCall($op, $args) {
-    $results = $this->state->get('image_test.results') ?: [];
+    $results = $this->state->get('image_test.results', []);
     $results[$op][] = $args;
     // A call to apply is also logged under its operation name whereby the
     // array of arguments are logged as separate arguments, this because at the
@@ -258,7 +259,7 @@ class TestToolkit extends ImageToolkitBase {
    */
   public function apply($operation, array $arguments = []) {
     $this->logCall('apply', func_get_args());
-    return TRUE;
+    return parent::apply($operation, $arguments);
   }
 
 }

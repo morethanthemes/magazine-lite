@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\System;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Flood\DatabaseBackend;
 use Drupal\Core\Flood\MemoryBackend;
 use Drupal\KernelTests\KernelTestBase;
@@ -19,9 +22,9 @@ class FloodTest extends KernelTestBase {
   protected static $modules = ['system'];
 
   /**
-   * Test flood control mechanism clean-up.
+   * Tests flood control mechanism clean-up.
    */
-  public function testCleanUp() {
+  public function testCleanUp(): void {
     $threshold = 1;
     $window_expired = -1;
     $name = 'flood_test_cleanup';
@@ -47,15 +50,17 @@ class FloodTest extends KernelTestBase {
   }
 
   /**
-   * Test flood control memory backend.
+   * Tests flood control database backend.
    */
-  public function testMemoryBackend() {
+  public function testDatabaseBackend(): void {
     $threshold = 1;
     $window_expired = -1;
     $name = 'flood_test_cleanup';
 
+    $connection = \Drupal::service('database');
     $request_stack = \Drupal::service('request_stack');
-    $flood = new MemoryBackend($request_stack);
+    $time = \Drupal::service(TimeInterface::class);
+    $flood = new DatabaseBackend($connection, $request_stack, $time);
     $this->assertTrue($flood->isAllowed($name, $threshold));
     // Register expired event.
     $flood->register($name, $window_expired);
@@ -75,32 +80,41 @@ class FloodTest extends KernelTestBase {
   }
 
   /**
-   * Test flood control database backend.
+   * Provides an array of backends for testClearByPrefix.
    */
-  public function testDatabaseBackend() {
+  public function floodBackendProvider() :array {
+    $request_stack = \Drupal::service('request_stack');
+    $connection = \Drupal::service('database');
+    $time = \Drupal::service(TimeInterface::class);
+
+    return [
+      new MemoryBackend($request_stack),
+      new DatabaseBackend($connection, $request_stack, $time),
+    ];
+  }
+
+  /**
+   * Tests clearByPrefix method on flood backends.
+   */
+  public function testClearByPrefix(): void {
     $threshold = 1;
-    $window_expired = -1;
+    $window_expired = 3600;
+    $identifier = 'prefix-127.0.0.1';
     $name = 'flood_test_cleanup';
 
-    $connection = \Drupal::service('database');
-    $request_stack = \Drupal::service('request_stack');
-    $flood = new DatabaseBackend($connection, $request_stack);
-    $this->assertTrue($flood->isAllowed($name, $threshold));
-    // Register expired event.
-    $flood->register($name, $window_expired);
-    // Verify event is not allowed.
-    $this->assertFalse($flood->isAllowed($name, $threshold));
-    // Run cron and verify event is now allowed.
-    $flood->garbageCollection();
-    $this->assertTrue($flood->isAllowed($name, $threshold));
+    // We can't use an PHPUnit data provider because we need access to the
+    // container.
+    $backends = $this->floodBackendProvider();
 
-    // Register unexpired event.
-    $flood->register($name);
-    // Verify event is not allowed.
-    $this->assertFalse($flood->isAllowed($name, $threshold));
-    // Run cron and verify event is still not allowed.
-    $flood->garbageCollection();
-    $this->assertFalse($flood->isAllowed($name, $threshold));
+    foreach ($backends as $backend) {
+      // Register unexpired event.
+      $backend->register($name, $window_expired, $identifier);
+      // Verify event is not allowed.
+      $this->assertFalse($backend->isAllowed($name, $threshold, $window_expired, $identifier));
+      // Clear by prefix and verify event is now allowed.
+      $backend->clearByPrefix($name, 'prefix');
+      $this->assertTrue($backend->isAllowed($name, $threshold));
+    }
   }
 
 }

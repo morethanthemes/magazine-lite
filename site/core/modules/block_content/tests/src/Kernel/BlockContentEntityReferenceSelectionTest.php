@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -19,7 +21,7 @@ class BlockContentEntityReferenceSelectionTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'block_content',
     'block_content_test',
@@ -65,10 +67,8 @@ class BlockContentEntityReferenceSelectionTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequence']);
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('block_content');
 
@@ -99,7 +99,7 @@ class BlockContentEntityReferenceSelectionTest extends KernelTestBase {
       'target_bundles' => ['spiffy' => 'spiffy'],
       'sort' => ['field' => '_none'],
     ];
-    $this->selectionHandler = new TestSelection($configuration, '', '', $this->container->get('entity.manager'), $this->container->get('module_handler'), \Drupal::currentUser());
+    $this->selectionHandler = new TestSelection($configuration, '', '', $this->container->get('entity_type.manager'), $this->container->get('module_handler'), \Drupal::currentUser(), \Drupal::service('entity_field.manager'), \Drupal::service('entity_type.bundle.info'), \Drupal::service('entity.repository'));
 
     // Setup the 3 expectation cases.
     $this->expectations = [
@@ -120,26 +120,32 @@ class BlockContentEntityReferenceSelectionTest extends KernelTestBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testQueriesNotAltered() {
+  public function testQueriesNotAltered(): void {
     // Ensure that queries without all the tags are not altered.
-    $query = $this->entityTypeManager->getStorage('block_content')->getQuery();
+    $query = $this->entityTypeManager->getStorage('block_content')
+      ->getQuery()
+      ->accessCheck(FALSE);
     $this->assertCount(2, $query->execute());
 
-    $query = $this->entityTypeManager->getStorage('block_content')->getQuery();
+    $query = $this->entityTypeManager->getStorage('block_content')
+      ->getQuery()
+      ->accessCheck(FALSE);
     $query->addTag('block_content_access');
     $this->assertCount(2, $query->execute());
 
-    $query = $this->entityTypeManager->getStorage('block_content')->getQuery();
+    $query = $this->entityTypeManager->getStorage('block_content')
+      ->getQuery()
+      ->accessCheck(FALSE);
     $query->addTag('entity_query_block_content');
     $this->assertCount(2, $query->execute());
   }
 
   /**
-   * Test with no conditions set.
+   * Tests with no conditions set.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function testNoConditions() {
+  public function testNoConditions(): void {
     $this->assertEquals(
       $this->expectations['block_reusable'],
       $this->selectionHandler->getReferenceableEntities()
@@ -162,7 +168,7 @@ class BlockContentEntityReferenceSelectionTest extends KernelTestBase {
    *
    * @throws \Exception
    */
-  public function testFieldConditions($condition_type, $is_reusable) {
+  public function testFieldConditions($condition_type, $is_reusable): void {
     $this->selectionHandler->setTestMode($condition_type, $is_reusable);
     $this->assertEquals(
       $is_reusable ? $this->expectations['block_reusable'] : $this->expectations['block_non_reusable'],
@@ -173,7 +179,7 @@ class BlockContentEntityReferenceSelectionTest extends KernelTestBase {
   /**
    * Provides possible fields and condition types.
    */
-  public function fieldConditionProvider() {
+  public static function fieldConditionProvider() {
     $cases = [];
     foreach (['base', 'group', 'nested_group'] as $condition_type) {
       foreach ([TRUE, FALSE] as $reusable) {

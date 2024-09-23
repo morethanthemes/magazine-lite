@@ -2,9 +2,13 @@
 
 namespace Drupal\migrate\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
+use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StreamWrapper\LocalStream;
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
@@ -44,11 +48,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @endcode
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "file_copy"
- * )
  */
+#[MigrateProcess('file_copy')]
 class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -79,7 +80,7 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
    *   The plugin configuration.
    * @param string $plugin_id
    *   The plugin ID.
-   * @param mixed $plugin_definition
+   * @param array $plugin_definition
    *   The plugin definition.
    * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrappers
    *   The stream wrapper manager service.
@@ -121,7 +122,7 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
     if ($row->isStub()) {
       return NULL;
     }
-    list($source, $destination) = $value;
+    [$source, $destination] = $value;
 
     // If the source path or URI represents a remote resource, delegate to the
     // download plugin.
@@ -141,10 +142,11 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
 
     // Check if a writable directory exists, and if not try to create it.
     $dir = $this->getDirectory($destination);
-    // If the directory exists and is writable, avoid file_prepare_directory()
-    // call and write the file to destination.
+    // If the directory exists and is writable, avoid
+    // \Drupal\Core\File\FileSystemInterface::prepareDirectory() call and write
+    // the file to destination.
     if (!is_dir($dir) || !is_writable($dir)) {
-      if (!file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+      if (!$this->fileSystem->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
         throw new MigrateException("Could not create or write to directory '$dir'");
       }
     }
@@ -163,21 +165,35 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
    *   The source path or URI.
    * @param string $destination
    *   The destination path or URI.
-   * @param int $replace
-   *   (optional) FILE_EXISTS_REPLACE (default) or FILE_EXISTS_RENAME.
+   * @param \Drupal\Core\File\FileExists|int $fileExists
+   *   (optional) FileExists::Replace (default) or
+   *   FileExists::Rename.
    *
    * @return string|bool
    *   File destination on success, FALSE on failure.
    */
-  protected function writeFile($source, $destination, $replace = FILE_EXISTS_REPLACE) {
+  protected function writeFile($source, $destination, FileExists|int $fileExists = FileExists::Replace) {
+    if (!$fileExists instanceof FileExists) {
+      // @phpstan-ignore-next-line
+      $fileExists = FileExists::fromLegacyInt($fileExists, __METHOD__);
+    }
     // Check if there is a destination available for copying. If there isn't,
     // it already exists at the destination and the replace flag tells us to not
     // replace it. In that case, return the original destination.
-    if (!($final_destination = file_destination($destination, $replace))) {
+    if ($this->fileSystem->getDestinationFilename($destination, $fileExists) === FALSE) {
       return $destination;
     }
-    $function = 'file_unmanaged_' . ($this->configuration['move'] ? 'move' : 'copy');
-    return $function($source, $destination, $replace);
+    try {
+      if ($this->configuration['move']) {
+        return $this->fileSystem->move($source, $destination, $fileExists);
+      }
+      else {
+        return $this->fileSystem->copy($source, $destination, $fileExists);
+      }
+    }
+    catch (FileException $e) {
+      return FALSE;
+    }
   }
 
   /**
@@ -185,7 +201,8 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
    *
    * For URIs like public://foo.txt, the full physical path of public://
    * will be returned, since a scheme by itself will trip up certain file
-   * API functions (such as file_prepare_directory()).
+   * API functions (such as
+   * \Drupal\Core\File\FileSystemInterface::prepareDirectory()).
    *
    * @param string $uri
    *   The URI or path.
@@ -196,7 +213,7 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
    */
   protected function getDirectory($uri) {
     $dir = $this->fileSystem->dirname($uri);
-    if (substr($dir, -3) == '://') {
+    if (str_ends_with($dir, '://')) {
       return $this->fileSystem->realpath($dir);
     }
     return $dir;
@@ -231,7 +248,7 @@ class FileCopy extends FileProcessBase implements ContainerFactoryPluginInterfac
    * @return bool
    */
   protected function isLocalUri($uri) {
-    $scheme = $this->fileSystem->uriScheme($uri);
+    $scheme = StreamWrapperManager::getScheme($uri);
 
     // The vfs scheme is vfsStream, which is used in testing. vfsStream is a
     // simulated file system that exists only in memory, but should be treated
